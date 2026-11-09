@@ -1,0 +1,31 @@
+{
+  "name": "lgi-scorer",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "专精特新申报自评打分系统",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @lgi/server --filter @lgi/web dev",
+    "build": "pnpm --filter @lgi/web build",
+    "start": "pnpm build && pnpm --filter @lgi/server start",
+    "start:server": "pnpm --filter @lgi/server start",
+    "typecheck": "pnpm -r typecheck",
+    "validate": "node scripts/validate-config.mjs && pnpm typecheck && pnpm test",
+    "samples": "pnpm --filter @lgi/server exec tsx scripts/generate-samples.ts",
+    "check:font": "pnpm --filter @lgi/server exec tsx scripts/check-font.ts",
+    "pack:portable": "node scripts/build-portable.mjs",
+    "pack:zip": "node scripts/zip-portable.mjs",
+    "test": "pnpm --filter @lgi/shared test && pnpm --filter @lgi/server test",
+    "fix:identity": "pnpm --filter @lgi/server exec tsx scripts/backfill-identity.ts",
+    "recognize:license": "pnpm --filter @lgi/server exec tsx scripts/recognize-license.ts"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

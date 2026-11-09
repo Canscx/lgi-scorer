@@ -1,0 +1,61 @@
+{
+  "version": "1.1.0",
+  "note": "客户轻流程的可调参数。达标线继承 config/rules 的 passLine,此处不再重复声明;知识产权档位规则在 config/rules 的 IND_17 内。",
+  "lookup": {
+    "windowMinutes": 10,
+    "maxAttempts": 10
+  },
+  "recognize": {
+    "enabled": true,
+    "maxBytes": 10485760,
+    "maxPages": 3,
+    "hourlyLimit": 20,
+    "ttlHours": 720
+  },
+  "slots": [
+    {
+      "id": "license",
+      "title": "营业执照",
+      "hint": "拍照或上传 PDF 都行。系统会自动读经营范围、注册资本和成立日期，写进报告；不传也能出分。",
+      "required": false,
+      "accept": ["pdf", "jpg", "jpeg", "png"],
+      "docType": "cert"
+    },
+    {
+      "id": "finance",
+      "title": "财务报表（近三年年报）",
+      "hint": "资产负债表、利润表、现金流量表；电子税务局导出的「财务会计报告报送」PDF 也行。三年各传一份最准，只有一年也能算。",
+      "required": true,
+      "accept": ["pdf", "xlsx", "xls", "docx", "jpg", "jpeg", "png"]
+    },
+    {
+      "id": "tax",
+      "title": "企业所得税年度申报表",
+      "hint": "A 类年报，最好带「研发费用加计扣除优惠明细表(A107012)」，研发投入以这张表为准。",
+      "required": true,
+      "accept": ["pdf", "xlsx", "xls", "docx", "jpg", "jpeg", "png"]
+    },
+    {
+      "id": "ledger",
+      "title": "账簿与科目余额表",
+      "hint": "科目余额表、序时账、记账凭证，财务软件导出 Excel 即可。有助核对研发费用归集。",
+      "required": false,
+      "accept": ["pdf", "xlsx", "xls", "docx", "jpg", "jpeg", "png"]
+    },
+    {
+      "id": "extra",
+      "title": "其他补充材料",
+      "hint": "专利清单、资质证书、荣誉证书、标准文本、申报书，有什么传什么，缺了不影响出分。",
+      "required": false,
+      "accept": ["pdf", "xlsx", "xls", "docx", "jpg", "jpeg", "png"],
+      "docTypes": [
+        { "value": "patent", "label": "专利清单 / 专利证书" },
+        { "value": "cert", "label": "资质 / 荣誉证书" },
+        { "value": "standard", "label": "标准文本" },
+        { "value": "application", "label": "申报书 / 情况说明" },
+        { "value": "finance", "label": "财务报表" },
+        { "value": "other", "label": "其他（由 AI 判断）" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": "1.2.0",
+  "note": "确认页策略。阈值只在这里改,不要写进页面或路由代码。",
+  "autoConfirm": {
+    "enabled": true,
+    "minConfidence": 0.9,
+    "rejectUnverifiedQuote": true
+  },
+  "portal": {
+    "enabled": true,
+    "minConfidence": 0.5,
+    "mergePeriods": true
+  },
+  "zeroValue": {
+    "minConfidence": 0.9
+  },
+  "review": {
+    "defaultFilter": "pending",
+    "autoJumpToNext": true
+  }
+}

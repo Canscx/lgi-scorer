@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:28px 32px 40px;background:#fbfaff;color:#16181d;
+  font-family:'PingFang SC','Microsoft YaHei',-apple-system,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(680px 340px at 88% -6%,rgba(109,92,231,.10),transparent 66%),
+                   radial-gradient(560px 300px at 4% 2%,rgba(46,164,255,.07),transparent 64%)}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;color:#fff;
+  font-size:16px;font-weight:700;background:linear-gradient(145deg,#7b6cf0,#5b48d8);
+  box-shadow:0 10px 24px -12px rgba(109,92,231,.85)}
+.brand h1{margin:0;font-size:15px;font-weight:600}
+.brand p{margin:3px 0 0;font-size:11.5px;color:#8b90a0}
+.btn{height:38px;padding:0 20px;border-radius:11px;border:0;cursor:pointer;font-size:12.5px;
+  font-family:inherit;font-weight:600;color:#fff;background:linear-gradient(140deg,#7b6cf0,#5b48d8);
+  box-shadow:0 12px 26px -14px rgba(109,92,231,.85)}
+.btn.ghost{background:#fff;color:#3d4250;border:1px solid #eceaf4;box-shadow:none;font-weight:500}
+
+.row{display:grid;gap:16px;margin-bottom:16px}
+.r-3{grid-template-columns:1fr 1fr 1fr}
+.r-2{grid-template-columns:1fr 1fr}
+.r-hero{grid-template-columns:1fr 168px}
+
+.card{background:#fff;border:1px solid #eceaf4;border-radius:24px;padding:22px 24px;
+  box-shadow:0 20px 44px -38px rgba(30,27,60,.5)}
+.card.lav{background:linear-gradient(158deg,#f7f4ff,#f1ecff 52%,#ecf2ff);border-color:#e8e4f8}
+.card.blue{background:linear-gradient(158deg,#f5f9ff,#eef4ff);border-color:#e4ecfa}
+.card.mint{background:linear-gradient(158deg,#f2fdf9,#eafaf3);border-color:#dcf3ea}
+.card.hero{background:linear-gradient(135deg,#fff,#f7f5ff 46%,#eaf2ff);border-color:#e6e2f6;
+  display:grid;grid-template-columns:1fr 168px;gap:24px;align-items:center;padding:26px 28px}
+
+.eyebrow{font-size:10.5px;letter-spacing:2.2px;text-transform:uppercase;color:#6d5ce7;font-weight:600;margin-bottom:10px}
+h2{margin:0;font-size:21px;font-weight:600;line-height:1.3}
+.tags{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{height:27px;display:inline-flex;align-items:center;padding:0 12px;border-radius:9px;
+  font-size:11.5px;color:#3d4250;background:#fff;border:1px solid #eceaf4;white-space:nowrap}
+.tag.v{background:#ece8ff;border-color:#ddd6ff;color:#5343c4;font-weight:500}
+
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.hd h3{margin:0;font-size:12.5px;font-weight:600}
+.hd span{font-size:10.5px;color:#8b90a0}
+
+.ring{position:relative;width:128px;height:128px;margin:0 auto}
+.ring svg{display:block;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .num b{font-size:27px;font-weight:700;letter-spacing:-1px;line-height:1;
+  background:linear-gradient(160deg,#6d5ce7,#9a8bff);-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.ring .num span{font-size:10px;color:#8b90a0;margin-top:6px}
+
+.kpis{display:flex;gap:32px;margin-top:18px;padding-top:16px;border-top:1px solid #eceaf8}
+.kpi{display:flex;flex-direction:column;gap:4px}
+.kpi .k{font-size:10.5px;color:#8b90a0}
+.kpi .v{font-size:23px;font-weight:700;letter-spacing:-.8px;color:#6d5ce7}
+.kpi .v.mt{color:#12b886}
+.kpi .s{font-size:10px;color:#8b90a0}
+
+.dim{margin-bottom:12px}
+.dim:last-child{margin-bottom:0}
+.dim .r{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:6px;color:#3d4250}
+.dim .r i{font-style:normal;color:#8b90a0}
+.trk{height:7px;border-radius:5px;background:#eeecf6;overflow:hidden}
+.fil{height:100%;border-radius:5px;background:linear-gradient(90deg,#8d7cf5,#6d5ce7)}
+.fil.w{background:linear-gradient(90deg,#f0bb63,#e8a33d)}
+.fil.r{background:linear-gradient(90deg,#f6878f,#f0616d)}
+
+.gate{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #f2f0f8}
+.gate:last-child{border-bottom:0}
+.dot{width:17px;height:17px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}
+.ok{background:#e6f8f1;color:#12b886}
+.no{background:#fdeef0;color:#f0616d}
+.unk{background:#fdf3e3;color:#e8a33d}
+.gate .nm{flex:1;font-size:11.5px;color:#3d4250;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gate .vl{font-size:10.5px;color:#8b90a0}
+
+.adv{padding:12px 13px;border-radius:14px;background:#fff;border:1px solid #eceaf4;margin-bottom:9px}
+.adv:last-child{margin-bottom:0}
+.adv p{margin:0;font-size:11px;line-height:1.6;color:#3d4250}
+.adv .gain{margin-top:6px;font-size:10.5px;font-weight:600;color:#6d5ce7}
+
+.mat{display:flex;align-items:center;gap:10px;font-size:11px;color:#3d4250;margin-bottom:8px}
+.mat:last-child{margin-bottom:0}
+.mat span:first-child{width:78px;flex:none}
+.mat .bar{flex:1;height:6px;border-radius:3px;background:#eeecf6;overflow:hidden}
+.mat .bar div{height:100%;border-radius:3px;background:linear-gradient(90deg,#6d5ce7,#8d7cf5)}
+.mat .pc{width:28px;text-align:right;color:#8b90a0;font-size:10px;flex:none}
+
+.note{font-size:10px;color:#8b90a0;line-height:1.6;margin-top:10px;
+  padding-top:10px;border-top:1px solid #eef0f4}
+</style></head><body>
+
+<div class="top">
+  <div class="brand"><div class="mark">巨</div>
+    <div><h1>专精特新 · 小巨人自评系统</h1><p>上传材料 · 自动识别 · 出具达标诊断</p></div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn ghost">导出报告</button>
+    <button class="btn">补齐建议</button>
+  </div>
+</div>
+
+<!-- 第一行 -->
+<div class="row r-hero">
+  <div class="card hero">
+    <div>
+      <div class="eyebrow">Little Giant Assessment</div>
+      <h2>上海搜信网络科技有限公司</h2>
+      <div class="tags">
+        <span class="tag v">小巨人 · 新申请</span>
+        <span class="tag">统计期间 2023–2025</span>
+        <span class="tag">评估完成 11-09 15:42</span>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><span class="k">认定指标</span><span class="v">5 / 7</span><span class="s">两项待补</span></div>
+        <div class="kpi"><span class="k">证据覆盖</span><span class="v mt">86%</span><span class="s">23 项中 21 项有出处</span></div>
+        <div class="kpi"><span class="k">材料完整度</span><span class="v">72%</span><span class="s">5 / 8 槽位已传</span></div>
+        <div class="kpi"><span class="k">距参考线</span><span class="v">1.6</span><span class="s">差 1.6 分达标</span></div>
+      </div>
+    </div>
+    <div class="ring">
+      <svg width="128" height="128" viewBox="0 0 120 120">
+        <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#9a8bff"/><stop offset="100%" stop-color="#5b48d8"/></linearGradient></defs>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="#e8e4fb" stroke-width="10"/>
+        <circle cx="60" cy="60" r="50" fill="none" stroke="url(#gg)" stroke-width="10"
+          stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="56"/>
+      </svg>
+      <div class="num"><b>58.4</b><span>参考线 60</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 第二行 -->
+<div class="row r-2">
+  <div class="card">
+    <div class="hd"><h3>五维参考得分</h3><span>58.4 / 100</span></div>
+    <div class="dim"><div class="r"><span>专业化</span><i>9.6 / 15</i></div><div class="trk"><div class="fil" style="width:64%"></div></div></div>
+    <div class="dim"><div class="r"><span>精细化</span><i>14.8 / 20</i></div><div class="trk"><div class="fil" style="width:74%"></div></div></div>
+    <div class="dim"><div class="r"><span>特色化</span><i>7.2 / 15</i></div><div class="trk"><div class="fil w" style="width:48%"></div></div></div>
+    <div class="dim"><div class="r"><span>创新能力</span><i>22.1 / 35</i></div><div class="trk"><div class="fil" style="width:63%"></div></div></div>
+    <div class="dim"><div class="r"><span>成长性</span><i>4.7 / 15</i></div><div class="trk"><div class="fil r" style="width:31%"></div></div></div>
+  </div>
+
+  <div class="card lav">
+    <div class="hd"><h3>七项认定指标</h3><span>5 / 7 满足</span></div>
+    <div class="gate"><span class="dot ok">✓</span><span class="nm">已获专精特新中小企业称号</span><span class="vl">2024 年</span></div>
+    <div class="gate"><span class="dot ok">✓</span><span class="nm">细分市场深耕 ≥ 3 年</span><span class="vl">6.5 年</span></div>
+    <div class="gate"><span class="dot ok">✓</span><span class="nm">上年度营收 ≥ 5,000 万</span><span class="vl">6,240 万</span></div>
+    <div class="gate"><span class="dot ok">✓</span><span class="nm">主营占比 ≥ 90% ／ 负债率 ≤ 75%</span><span class="vl">94.2% / 61.8%</span></div>
+    <div class="gate"><span class="dot no">×</span><span class="nm">近两年营收复合增长率 ≥ 5%</span><span class="vl">2.1%</span></div>
+    <div class="gate"><span class="dot no">×</span><span class="nm">Ⅰ类知识产权 ≥ 4 项</span><span class="vl">3 项</span></div>
+    <div class="gate"><span class="dot unk">!</span><span class="nm">市占率与产业链（主观项）</span><span class="vl">待填</span></div>
+  </div>
+</div>
+
+<!-- 第三行 -->
+<div class="row r-3">
+  <div class="card mint">
+    <div class="hd"><h3>补齐建议</h3><span>3 条</span></div>
+    <div class="adv"><p>Ⅰ类知识产权差 1 项，补 1 项自主申请、权利人排名前三的发明专利。</p><div class="gain">预计 +3.2 分</div></div>
+    <div class="adv"><p>营收复合增长率 2.1%，需达 5%；可等 2027 年用新基数重算。</p><div class="gain">预计 +2.8 分</div></div>
+    <div class="adv"><p>成长性仅 4.7 / 15，利润增长与净资产增速均低于行业均值。</p><div class="gain">预计 +4.1 分</div></div>
+  </div>
+
+  <div class="card blue">
+    <div class="hd"><h3>材料槽位</h3><span>5 / 8 已传</span></div>
+    <div class="mat"><span>财务报表</span><div class="bar"><div style="width:100%"></div></div><span class="pc">3/3</span></div>
+    <div class="mat"><span>所得税年报</span><div class="bar"><div style="width:100%"></div></div><span class="pc">3/3</span></div>
+    <div class="mat"><span>专精特新证书</span><div class="bar"><div style="width:100%"></div></div><span class="pc">1/1</span></div>
+    <div class="mat"><span>知识产权清单</span><div class="bar"><div style="width:66%"></div></div><span class="pc">2/3</span></div>
+    <div class="mat"><span>市占率说明</span><div class="bar"><div style="width:0"></div></div><span class="pc">—</span></div>
+    <div class="mat"><span>产业链说明</span><div class="bar"><div style="width:0"></div></div><span class="pc">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="hd"><h3>口径声明</h3><span>重要</span></div>
+    <div class="adv" style="background:#fafaff"><p><b>参考得分不可用于申报自评填报。</b>维度权重与三级指标权重均未官方公开，本工具给出的是自查参考值。</p></div>
+    <div class="adv" style="background:#fafaff"><p><b>市占率与产业链为提示项。</b>官方口径为企业如实说明即可，本工具不作否决，只做提醒。</p></div>
+    <div class="note">最终认定以培育平台计算与主管部门审核结果为准。</div>
+  </div>
+</div>
+
+</body></html>

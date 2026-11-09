@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#0b0c0f;
+  font-family:'PingFang SC','Microsoft YaHei',-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+.nav{display:flex;align-items:center;justify-content:space-between;padding:20px 56px;
+  border-bottom:1px solid #f0f0f2}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
+.logo .m{width:26px;height:26px;border-radius:7px;background:#0b0c0f;color:#fff;
+  display:grid;place-items:center;font-size:12px;font-weight:700}
+.nav ul{display:flex;gap:32px;margin:0;padding:0;list-style:none;font-size:13.5px;color:#3f434b}
+.nav .r{display:flex;align-items:center;gap:22px;font-size:13.5px;color:#3f434b}
+.nav .r .pill{height:38px;padding:0 20px;border-radius:9px;background:#0b0c0f;color:#fff;
+  display:inline-flex;align-items:center;font-weight:500}
+
+.hero{max-width:1440px;margin:0 auto;padding:80px 56px 0;
+  display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+h1{margin:0;font-size:62px;line-height:1.08;letter-spacing:-2.6px;font-weight:700}
+.hero p{margin:24px 0 0;font-size:16px;line-height:1.8;color:#5b606a;max-width:520px}
+.cta{margin-top:36px;display:flex;align-items:center;gap:28px}
+.b1{height:50px;padding:0 28px;border-radius:10px;background:#0b0c0f;color:#fff;font-size:14px;
+  font-weight:500;border:0;cursor:pointer;font-family:inherit}
+.b2{font-size:14px;color:#0b0c0f;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+
+.visual{position:relative;aspect-ratio:1/.9;background:#08090b;display:grid;place-items:center;overflow:hidden}
+.circ{position:absolute;border:1.6px solid rgba(255,255,255,.9);border-radius:50%;aspect-ratio:1}
+.c1{width:56%;left:6%;top:50%;transform:translateY(-50%)}
+.c2{width:56%;right:6%;top:50%;transform:translateY(-50%)}
+.hatch{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:27%;aspect-ratio:1;
+  background:repeating-linear-gradient(48deg,rgba(255,255,255,.5) 0 1.4px,transparent 1.4px 7px)}
+.dotc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:46px;height:46px;
+  border-radius:50%;background:#eceded;box-shadow:0 0 36px 8px rgba(255,255,255,.15)}
+.lb{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;color:#fff;letter-spacing:.5px;z-index:2}
+.lb.l{left:5%}.lb.r{right:5%}
+
+.stats{border-top:1px solid #e8e8ea;margin-top:88px}
+.stats-in{max-width:1440px;margin:0 auto;padding:0 56px;display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:36px 34px 36px 0;border-right:1px solid #f0f0f2}
+.stat:last-child{border-right:0}
+.stat .k{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#8e939c;font-weight:600}
+.stat .v{margin-top:14px;font-size:42px;font-weight:700;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.stat .v em{font-style:normal;font-size:15px;font-weight:500;letter-spacing:0;color:#8e939c;margin-left:5px}
+.stat .v.blue{color:#1f4fd8}
+.stat .d{margin-top:10px;font-size:12.5px;color:#5b606a}
+
+.main{max-width:1440px;margin:0 auto;padding:72px 56px 96px;display:grid;
+  grid-template-columns:1fr 1fr;gap:0 72px;align-items:start}
+.sec{padding:0 0 40px}
+.sec h2{margin:0 0 6px;font-size:18px;font-weight:600;letter-spacing:-.3px}
+.sec .sub{margin:0 0 22px;font-size:12.5px;color:#8e939c}
+
+.row{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid #f4f4f5}
+.row:last-child{border-bottom:0}
+.st{width:12px;font-size:12px;font-weight:700;flex:none;text-align:center}
+.st.p{color:#0b9b6e}.st.f{color:#d63b3b}.st.u{color:#c98a12}
+.row .nm{flex:1;font-size:13.5px;color:#3f434b}
+.row .vl{font-size:12.5px;color:#8e939c;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .vl.bad{color:#d63b3b;font-weight:500}
+
+.dm{display:flex;align-items:center;gap:16px;padding:10px 0}
+.dm .nm{width:70px;font-size:13px;color:#3f434b;flex:none}
+.dm .trk{flex:1;display:block;height:4px;background:#f0f0f2;overflow:hidden}
+.dm .fil{display:block;height:4px;background:#0b0c0f}
+.dm .fil.g{background:#c9ccd2;height:4px}
+.dm .fil.b{background:#1f4fd8;height:4px}
+.dm .vv{width:62px;text-align:right;font-size:12px;color:#8e939c;font-variant-numeric:tabular-nums;flex:none}
+.dm .vv.bad{color:#d63b3b}
+
+.note{padding:32px 0 0;margin-top:12px;border-top:1px solid #e8e8ea}
+.note h3{margin:0 0 12px;font-size:14px;font-weight:600}
+.note p{margin:0;font-size:12.5px;line-height:1.9;color:#5b606a}
+.note .btns{margin-top:24px;display:flex;gap:12px}
+.note .btns .x1{height:44px;padding:0 22px;border-radius:9px;background:#0b0c0f;color:#fff;
+  border:0;font-size:13px;font-family:inherit;cursor:pointer;font-weight:500}
+.note .btns .x2{height:44px;padding:0 22px;border-radius:9px;background:#fff;color:#0b0c0f;
+  border:1px solid #e8e8ea;font-size:13px;font-family:inherit;cursor:pointer}
+</style></head><body>
+
+<div class="nav">
+  <div class="logo"><span class="m">巨</span>小巨人自评</div>
+  <ul><li>认定标准</li><li>打分方法</li><li>差异对照</li><li>常见问题</li></ul>
+  <div class="r"><span>登录</span><span class="pill">开始自评</span></div>
+</div>
+
+<div class="hero">
+  <div>
+    <h1>七项认定指标<br>一次讲清楚</h1>
+    <p>上传财务报表与知识产权清单，几分钟内得到专精特新“小巨人”逐条达标判定、五维参考得分，以及差什么、补什么。</p>
+    <div class="cta">
+      <button class="b1">免费自评</button>
+      <a class="b2">看认定标准 <span>→</span></a>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="circ c1"></div><div class="circ c2"></div>
+    <div class="hatch"></div><div class="dotc"></div>
+    <div class="lb l">专精特新</div><div class="lb r">小巨人</div>
+  </div>
+</div>
+
+<div class="stats"><div class="stats-in">
+  <div class="stat"><div class="k">参考得分</div><div class="v blue">58.4<em>/ 100</em></div><div class="d">参考线 60 分·差 1.6 分</div></div>
+  <div class="stat"><div class="k">认定门槛</div><div class="v">5<em>/ 7</em></div><div class="d">两项待补</div></div>
+  <div class="stat"><div class="k">证据覆盖</div><div class="v">86<em>%</em></div><div class="d">23 项中 21 项有出处</div></div>
+  <div class="stat"><div class="k">材料完整度</div><div class="v">72<em>%</em></div><div class="d">8 个槽位传了 5 个</div></div>
+</div></div>
+
+<div class="main">
+  <div>
+    <div class="sec">
+      <h2>七项认定指标</h2>
+      <p class="sub">官方要求同时满足，缺一不可</p>
+      <div class="row"><span class="st p">✓</span><span class="nm">已获专精特新中小企业称号</span><span class="vl">2024 年认定</span></div>
+      <div class="row"><span class="st p">✓</span><span class="nm">截至上年末从事细分市场 ≥ 3 年</span><span class="vl">6.5 年</span></div>
+      <div class="row"><span class="st p">✓</span><span class="nm">上年度营业收入 ≥ 5,000 万</span><span class="vl">6,240 万</span></div>
+      <div class="row"><span class="st p">✓</span><span class="nm">主营业务收入占比 ≥ 90%</span><span class="vl">94.2%</span></div>
+      <div class="row"><span class="st p">✓</span><span class="nm">上年末资产负债率 ≤ 75%</span><span class="vl">61.8%</span></div>
+      <div class="row"><span class="st f">×</span><span class="nm">近两年营业收入复合增长率 ≥ 5%</span><span class="vl bad">2.1%</span></div>
+      <div class="row"><span class="st f">×</span><span class="nm">Ⅰ类知识产权 ≥ 4 项（不含转入）</span><span class="vl bad">3 项</span></div>
+      <div class="row"><span class="st u">!</span><span class="nm">市场占有率 ≥ 10% 或国内前三（主观项）</span><span class="vl">待填</span></div>
+      <div class="row"><span class="st u">!</span><span class="nm">主导产品属六基／产业链关键环节（主观项）</span><span class="vl">待填</span></div>
+    </div>
+
+    <div class="sec">
+      <h2>补齐建议</h2>
+      <p class="sub">数字由规则引擎计算，文字由模型撰写</p>
+      <div class="row"><span class="nm">补 1 项自主申请、权利人排名前三的Ⅰ类发明专利，同时解掉门槛与提分</span><span class="vl">+3.2</span></div>
+      <div class="row"><span class="nm">营收复合增长率 2.1% 需达 5%，可等 2027 年用新基数重算</span><span class="vl">+2.8</span></div>
+      <div class="row"><span class="nm">成长性维度仅 4.7/15，利润增长与净资产增速低于行业均值</span><span class="vl">+4.1</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec">
+      <h2>五维参考得分</h2>
+      <p class="sub">官方权重未公开，本工具按维度占比估算</p>
+      <div class="dm"><span class="nm">专业化</span><span class="trk"><span class="fil" style="width:64%"></span></span><span class="vv">9.6 / 15</span></div>
+      <div class="dm"><span class="nm">精细化</span><span class="trk"><span class="fil" style="width:74%"></span></span><span class="vv">14.8 / 20</span></div>
+      <div class="dm"><span class="nm">特色化</span><span class="trk"><span class="fil g" style="width:48%"></span></span><span class="vv">7.2 / 15</span></div>
+      <div class="dm"><span class="nm">创新能力</span><span class="trk"><span class="fil" style="width:63%"></span></span><span class="vv">22.1 / 35</span></div>
+      <div class="dm"><span class="nm">成长性</span><span class="trk"><span class="fil b" style="width:31%"></span></span><span class="vv bad">4.7 / 15</span></div>
+    </div>
+
+    <div class="sec">
+      <h2>材料槽位</h2>
+      <p class="sub">缺几份也能出分，缺的部分按中性值估算</p>
+      <div class="dm"><span class="nm">财务报表</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="vv">3 / 3</span></div>
+      <div class="dm"><span class="nm">所得税年报</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="vv">3 / 3</span></div>
+      <div class="dm"><span class="nm">专精特新证书</span><span class="trk"><span class="fil" style="width:100%"></span></span><span class="vv">1 / 1</span></div>
+      <div class="dm"><span class="nm">知识产权清单</span><span class="trk"><span class="fil g" style="width:66%"></span></span><span class="vv">2 / 3</span></div>
+      <div class="dm"><span class="nm">市占率说明</span><span class="trk"><span class="fil g" style="width:0"></span></span><span class="vv">未传</span></div>
+      <div class="dm"><span class="nm">产业链说明</span><span class="trk"><span class="fil g" style="width:0"></span></span><span class="vv">未传</span></div>
+    </div>
+
+    <div class="note">
+      <h3>参考得分不可用于申报自评填报</h3>
+      <p>维度权重与三级指标权重均未官方公开，本工具给出的是自查参考值。市占率与产业链为提示项，官方口径为企业如实说明即可，本工具不作否决。最终认定以培育平台计算与主管部门审核结果为准。</p>
+      <div class="btns"><button class="x1">下载报告</button><button class="x2">重新评估</button></div>
+    </div>
+  </div>
+</div>
+</body></html>

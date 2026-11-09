@@ -1,0 +1,40 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+data/
+fonts/
+
+.env
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+.idea/
+*.swp
+
+.tmp/
+
+# 工作区笔记与智能体记忆,不进仓库
+.workbuddy/
+
+release/
+
+/*.zip
+
+# 客户真实材料与二维码源文件,不进仓库
+资料参考/
+联系顾问微信二维码.png
+
+# 面板与证书自动生成,不属于仓库
+.htaccess
+.well-known/

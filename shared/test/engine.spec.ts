@@ -1,0 +1,237 @@
+import { describe, expect, it } from 'vitest'
+import { evaluate } from '../src/scoring/engine'
+import type { FieldEntry } from '../src/scoring/types'
+import { buildModel, entry, rules } from './helpers'
+
+const baseFields = {
+  'company.name': entry('鼎新精工(虚构)'),
+  'company.srdiTitle': entry(true),
+  'company.subMarketYears': entry(6),
+  'company.employeeYearAvg': entry(260),
+
+  'fin.revenue': entry({ 2025: 160000000, 2024: 135000000, 2023: 110000000 }),
+  'fin.mainBusinessRevenue': entry({ 2025: 150000000, 2024: 128000000, 2023: 104000000 }),
+  'fin.assetLiabilityRatio': entry(0.55),
+  'fin.equityInvested': entry(25000000),
+  'fin.rdExpense': entry({ 2025: 12000000, 2024: 9500000, 2023: 7000000 }),
+  'fin.netProfit': entry({ 2025: 11000000, 2024: 9000000, 2023: 8000000 }),
+  'fin.netAssets': entry({ 2025: 90000000, 2024: 80000000, 2023: 72000000 }),
+  'fin.totalProfit': entry({ 2025: 13000000, 2024: 10500000, 2023: 9000000 }),
+  'fin.productSalesCost': entry({ 2025: 120000000, 2024: 100000000, 2023: 82000000 }),
+  'fin.operatingCost': entry({ 2025: 118000000, 2024: 99000000, 2023: 81000000 }),
+  'fin.salesExpense': entry({ 2025: 9000000, 2024: 8000000, 2023: 7000000 }),
+  'fin.adminExpense': entry({ 2025: 8000000, 2024: 7500000, 2023: 7000000 }),
+
+  'ip.inventionGrantedByYear': entry([
+    { year: 2025, count: 3 },
+    { year: 2024, count: 2 },
+    { year: 2023, count: 2 },
+    { year: 2020, count: 4 }
+  ]),
+  'ip.ipcDistribution': entry([
+    { ipc: 'B23', count: 4 },
+    { ipc: 'G01', count: 2 },
+    { ipc: 'H02', count: 1 }
+  ]),
+  'ip.inventionFirstApplicant': entry(7),
+  'ip.inventionI': entry([
+    { selfApplied: true, applicantRank: 1, transferredIn: false },
+    { selfApplied: true, applicantRank: 2, transferredIn: false },
+    { selfApplied: true, applicantRank: 3, transferredIn: false },
+    { selfApplied: true, applicantRank: 1, transferredIn: false }
+  ]),
+  'ip.pctCount': entry(6),
+  'company.applicationType': entry('new'),
+  'company.revenueCagr': entry(0.12),
+  'ip.classICount': entry(9),
+  'ip.classIICount': entry(4),
+  'ip.selfDevelopedI': entry(true),
+  'ip.highValueI': entry(false),
+
+  'std.hostedIntl': entry([]),
+  'std.hostedNatInd': entry(['GB/T 1', 'JB/T 2']),
+  'std.joinedIntl': entry([]),
+  'std.joinedNatInd': entry(['GB/T 3']),
+
+  'qual.qualityAward': entry('province_award'),
+  'qual.productCert': entry(true),
+  'qual.digitalTransformation': entry('ministry_title'),
+  'qual.greenTitles': entry(['绿色工厂', '绿色供应链', '绿色设计产品']),
+  'qual.rdInstitution': entry('province'),
+  'qual.marketRanking': entry('province_top3'),
+  'qual.nationalScienceAward': entry(false),
+  'qual.marketShare': entry(0.15),
+  'qual.chainSixBase': entry(true),
+  'qual.chainKeySegment': entry(true),
+
+  'hr.rdHeadcount': entry(60),
+  'hr.totalHeadcount': entry(260)
+}
+
+const model = buildModel(baseFields)
+const result = evaluate(model, rules)
+const byId = (id: string) => result.indicators.find((item) => item.id === id)
+
+describe('引擎整体', () => {
+  it('输出 23 项指标与 9 道门槛', () => {
+    expect(result.indicators).toHaveLength(23)
+    expect(result.gates).toHaveLength(9)
+    expect(result.dimensions).toHaveLength(5)
+  })
+
+  it('权重归一后合计 100', () => {
+    const sum = result.indicators.reduce((acc, item) => acc + item.effectiveWeight, 0)
+    expect(sum).toBeCloseTo(100, 9)
+  })
+
+  it('C 类不可得项被排除且权重已分摊', () => {
+    const excluded = byId('IND_18')
+    expect(excluded?.status).toBe('excluded')
+    expect(excluded?.effectiveWeight).toBe(0)
+    expect(result.excluded.map((item) => item.indicatorId)).toContain('IND_18')
+  })
+
+  it('三口径满足 conservative ≤ official ≤ optimistic', () => {
+    expect(result.totals.conservative).toBeLessThanOrEqual(result.totals.official)
+    expect(result.totals.official).toBeLessThanOrEqual(result.totals.optimistic)
+  })
+
+  it('强指标企业硬门槛全过且结论为通过', () => {
+    const hard = result.gates.filter((gate) => gate.severity === 'hard')
+    expect(hard.every((gate) => gate.effective === 'pass')).toBe(true)
+    expect(result.conclusion).toBe('pass')
+    expect(result.totals.conservative).toBeGreaterThan(50)
+  })
+
+  it('单项得分率落在 [0,1]', () => {
+    for (const item of result.indicators) {
+      if (item.score !== null) {
+        expect(item.score).toBeGreaterThanOrEqual(0)
+        expect(item.score).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
+  it('知识产权按官方就高选档,Ⅱ类不叠加', () => {
+    const ind = byId('IND_17')
+    expect(ind?.raw).toBe(8)
+    expect(ind?.score).toBeCloseTo(0.8, 9)
+  })
+
+  it('缺失清单只列真正没值的字段', () => {
+    const fields: Record<string, FieldEntry> = { ...baseFields }
+    delete fields['company.employeeYearAvg']
+    const partial = evaluate(buildModel(fields), rules)
+    const record = partial.missing.find((item) => item.indicatorId === 'IND_05')
+    expect(record?.fieldKeys).toEqual(['company.employeeYearAvg'])
+  })
+
+  it('标准计分不触顶时按 cap 折算', () => {
+    const ind = byId('IND_04')
+    expect(ind?.raw).toBe(7)
+    expect(ind?.score).toBeCloseTo(0.7, 9)
+  })
+
+  it('含公式的指标都带出处文字', () => {
+    for (const item of result.indicators) {
+      expect(item.explain.text.length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe('缺失字段的三口径展开', () => {
+  const { 'qual.productCert': _omitted, ...partialFields } = baseFields
+  const partial = evaluate(buildModel(partialFields), rules)
+  const target = partial.indicators.find((item) => item.id === 'IND_10')
+
+  it('缺证据的指标按 absent 处理', () => {
+    expect(target?.status).toBe('missing')
+    expect(target?.basis).toBe('absent')
+    expect(target?.score).toBeNull()
+  })
+
+  it('official 取中性 0.5,conservative 记 0,optimistic 记满分', () => {
+    const weight = target?.effectiveWeight ?? 0
+    expect(target?.contribution.official).toBeCloseTo(weight * 0.5, 9)
+    expect(target?.contribution.conservative).toBe(0)
+    expect(target?.contribution.optimistic).toBeCloseTo(weight, 9)
+  })
+
+  it('三口径区间被拉开且 confidence 下降', () => {
+    expect(partial.totals.conservative).toBeLessThan(partial.totals.official)
+    expect(partial.totals.official).toBeLessThan(partial.totals.optimistic)
+    expect(partial.totals.confidence).toBeLessThan(1)
+  })
+
+  it('缺失项进入缺失清单', () => {
+    expect(partial.missing.map((item) => item.indicatorId)).toContain('IND_10')
+  })
+})
+
+describe('边界保护只管事实,不管缺证据', () => {
+  const { 'fin.netAssets': _assets, ...withoutAssets } = baseFields
+  const missingAssets = evaluate(buildModel(withoutAssets), rules)
+
+  it('守卫字段缺失记为缺证据,不得判为不适用', () => {
+    const roe = missingAssets.indicators.find((item) => item.id === 'IND_06')
+    expect(roe?.status).toBe('missing')
+    expect(roe?.basis).toBe('absent')
+    expect(roe?.flags).not.toContain('guard_failed')
+    expect(missingAssets.indicators.some((item) => item.status === 'notApplicable')).toBe(false)
+  })
+
+  it('守卫取值为假才判不适用并记 0 分', () => {
+    const negative = evaluate(
+      buildModel({
+        ...baseFields,
+        'fin.netAssets': entry({ 2025: -1000, 2024: -2000, 2023: -3000 })
+      }),
+      rules
+    )
+    const roe = negative.indicators.find((item) => item.id === 'IND_06')
+    expect(roe?.status).toBe('notApplicable')
+    expect(roe?.score).toBe(0)
+    expect(roe?.flags).toContain('negative_equity')
+    expect(roe?.flags).toContain('guard_failed')
+  })
+})
+
+describe('知识产权就高选档', () => {
+  const ipPoints = (classI: number, classII: number, selfDeveloped: boolean, highValue: boolean) => {
+    const model = buildModel({
+      ...baseFields,
+      'ip.classICount': entry(classI),
+      'ip.classIICount': entry(classII),
+      'ip.selfDevelopedI': entry(selfDeveloped),
+      'ip.highValueI': entry(highValue)
+    })
+    return evaluate(model, rules).indicators.find((item) => item.id === 'IND_17')?.raw
+  }
+
+  it('Ⅰ类 1–3 项未达门槛只落 3 分档', () => {
+    expect(ipPoints(1, 9, false, false)).toBe(3)
+    expect(ipPoints(3, 9, true, true)).toBe(3)
+  })
+
+  it('Ⅰ类 ≥4 项且自主研发落 8 分档', () => {
+    expect(ipPoints(4, 9, true, false)).toBe(8)
+  })
+
+  it('Ⅰ类 ≥4 项且高价值落 10 分档', () => {
+    expect(ipPoints(4, 0, true, true)).toBe(10)
+    expect(ipPoints(17, 8, true, true)).toBe(10)
+  })
+
+  it('Ⅰ类 ≥4 项但非自主研发落 7 分档', () => {
+    expect(ipPoints(4, 0, false, false)).toBe(7)
+  })
+
+  it('只有Ⅱ类落 1 分档,件数再多也不叠加', () => {
+    expect(ipPoints(0, 9, false, false)).toBe(1)
+    expect(ipPoints(0, 200, false, false)).toBe(1)
+  })
+
+  it('Ⅰ类与Ⅱ类都没有记 0 分', () => {
+    expect(ipPoints(0, 0, false, false)).toBe(0)
+  })
+})

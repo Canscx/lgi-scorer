@@ -1,0 +1,112 @@
+<script setup lang="ts">
+import { TARGET_RATE } from '@lgi/shared'
+import type { PortalDimension } from '@lgi/shared'
+
+defineProps<{ dimensions: PortalDimension[] }>()
+
+const pct = (value: number, max: number) => (max > 0 ? Math.min(100, (value / max) * 100) : 0)
+
+const goalOf = (item: PortalDimension) =>
+  Number.isFinite(item.goal) ? item.goal : Math.max(item.score, item.max * TARGET_RATE)
+</script>
+
+<template>
+  <div class="bars">
+    <div v-for="item in dimensions" :key="item.id" class="row">
+      <div class="label">
+        <span class="name">{{ item.name }}</span>
+        <span class="weight">权重 {{ item.weight }}%</span>
+      </div>
+      <div class="track">
+        <div class="fill" :style="{ width: `${pct(item.score, item.max)}%` }" />
+        <div class="ghost" :style="{ width: `${pct(goalOf(item), item.max)}%` }" />
+      </div>
+      <div class="value">
+        <b>{{ item.score.toFixed(1) }}</b>
+        <span>/ {{ item.max.toFixed(1) }}</span>
+        <em v-if="goalOf(item) > item.score" class="goal">→ {{ goalOf(item).toFixed(1) }}</em>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 136px 1fr 132px;
+  align-items: center;
+  gap: 14px;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-size: 13px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.weight {
+  font-size: 11px;
+  color: #a3adbb;
+}
+
+.track {
+  position: relative;
+  height: 10px;
+  border-radius: 6px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+
+.ghost {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(14, 165, 233, 0.28) 0,
+    rgba(14, 165, 233, 0.28) 5px,
+    transparent 5px,
+    transparent 9px
+  );
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  z-index: 1;
+}
+
+.value {
+  text-align: right;
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.value b {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+  margin-right: 3px;
+}
+
+.value .goal {
+  font-style: normal;
+  margin-left: 4px;
+  font-size: 11px;
+  color: #0ea5e9;
+}
+</style>

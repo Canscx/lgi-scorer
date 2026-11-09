@@ -1,0 +1,217 @@
+# 解析与 AI 契约
+
+> 从文件到证据表的完整链路。字段定义在 `config/catalog/field-catalog.v1.json`,本文写**怎么抽、抽完怎么验**。
+
+## 一、链路总览
+
+```
+文件 → sha256 去重 → 魔数判型 → docType 分类 → 逐页路由 → PageDoc[]
+                                                              ↓
+                                              AI 抽取(文本/视觉双通道)
+                                                              ↓
+                                                    Candidate[](只追加,不覆盖)
+```
+
+## 二、判型:不信扩展名
+
+| 头部字节 | 判定 |
+| --- | --- |
+| `%PDF` | PDF |
+| `PK\x03\x04` + 读 `[Content_Types].xml` | docx 或 xlsx |
+| `\xD0\xCF\x11\xE0` | 老版 doc/xls → **直接拒绝**,提示另存为新格式 |
+| `FFD8FF` / `89504E47` / `RIFF....WEBP` | 图片 |
+
+## 三、扫描件:页级判定,不是文件级
+
+```js
+printable = pageText.replace(/\s/g, '').length
+hasGlyphs = textItems.some(it => it.width > 0 && it.str.trim())
+route = (printable >= 30 && hasGlyphs) ? 'text' : 'vision'
+```
+
+文件级汇总:
+
+| 图片页占比 | 文件 route | 行为 |
+| --- | --- | --- |
+| ≤ 0.2 | `text` | 全部走文本通道 |
+| 0.2 – 0.5 | `hybrid` | **逐页**混合,`pages.json` 记录每页 route |
+| > 0.5 | `vision` | 整份走视觉 |
+
+补充规则:
+
+- 页数 > 30 且首 3 页全为图 → 直接判扫描件,不再逐页试探(省时间)
+- 有文本层但乱码率高(大量 `\uFFFD`)→ 判"伪文本层",降级视觉
+
+## 四、渲染参数
+
+| 参数 | 常规页 | 财务表格页 |
+| --- | --- | --- |
+| scale | 2.0(约 144 DPI) | 2.4 |
+| maxLongEdge | 1600 | 2000 |
+| format | jpeg | jpeg |
+| quality | 0.82 | 0.88 |
+| grayscale | false（红章需保留色彩） | false |
+| 单页目标体积 | ≤ 350KB | ≤ 500KB |
+
+表格页判定:检测到大面积水平线,或 `docType == audit` 且页内含"资产负债表/利润表/现金流量表"字样。
+
+## 五、限额
+
+| 限制 | 默认 | 超限行为 |
+| --- | --- | --- |
+| 单文件页数 | 80 | 仅解析前 80 页,报告标 `truncated` |
+| 单项目页数 | 400 | 上传时拦截,提示拆分 |
+| 单文件视觉页 | 40 | 超出只取文本层,标 `visionSkipped` |
+| 单文件大小 | 50MB | 拒绝 |
+| 单项目 token | 400k | 停止后续调用,已完成部分照常出分 |
+
+## 六、三种格式的落地细节
+
+**PDF** —— `pdfjs-dist/legacy/build/pdf.mjs` + `@napi-rs/canvas`。文本项按 `transform[5]` 分组还原行,再按 `x` 排序拼行。表格页用"3 个以上 item 的 x 坐标重复出现在同一列"启发式识别,转 `|` 分隔伪表格(比空格拼接更利于模型对齐列)。
+
+**DOCX** —— `mammoth.convertToHtml({styleMap})` 保留 `<table>`,自写 `tableToPipeText()` 把每行转 `列1 | 列2 | 列3`。正文按 `<h1..h3>` 分节写进 `blocks[]`。**不用 `extractRawText`**,它会拍平表格导致数字错位。
+
+**XLSX** —— SheetJS `read(buf, {cellDates:true, cellFormula:true})`,`sheet_to_json({header:1, raw:false})`。表头含"营业收入/研发费用/净利润"的列**直接结构化抽取,不经 AI**,`confidence:0.97`;AI 只负责识别表头别名。
+
+**图片** —— 直传视觉,单图作为一页。prompt 要求忽略透视畸变,只读清晰字段;低质量图 `confidence ≤ 0.4`。
+
+**落地位置(第 6 步已实现)**
+
+| 产物 | 路径 |
+| --- | --- |
+| 每文件页数据 | `data/projects/<id>/pages/<fileId>.json`(`FilePages`) |
+| 页图 | `data/projects/<id>/pages/<fileId>/pN.jpg` |
+| 文件状态 | 回填 `project.json` 的 `pages / route / status / truncated / visionSkipped / unreadable` |
+
+- PDF 的**文本页也渲染页图**,确认页要靠它做 bbox 高亮;`PageDoc.text` 是还原后的行文本,`tables[]` 只在列对齐检测命中时出现。
+- DOCX 整份记 1 页(mammoth 不保留分页符);XLSX 一个工作表 1 页;图片 1 页,`text` 为空且 `route` 恒为 `vision`。
+- `docType` 暂由文件名启发式给出,第 7 步必须用 AI 的 `documentMeta.docType` 覆盖。
+- 解析阶段不调用任何模型,产出与分数无关;任务进度走 `POST /parse` 返回的 jobId + SSE。
+
+## 七、AI 调用:四层拼接
+
+| 层 | 内容 | 变化频率 | 缓存 |
+| --- | --- | --- | --- |
+| L0 system | 角色 + 铁律:只抄录不推断、不评价、不补全,找不到就 `found:false`,金额必带原文单位 | 极低 | 前缀缓存 |
+| L1 schema | 本次允许的**字段子集** + 输出 JSON 形状 + 2 个正反例 | 中 | 按 docType 缓存 |
+| L2 document | 页文本(`### p3` 分隔)或页图 + 页码标注 | 每块不同 | 不缓存 |
+| L3 instruction | "本块 p3–p7,只返回这些页命中的字段" | 每块不同 | 不缓存 |
+
+**字段子集是省钱关键。** 按 docType 分派:`audit` → 全部 `fin.*`;`patent` → `ip.*`;`cert` → `qual.*`;`standard` → `std.*`。单次 prompt 的 schema 段从 40 字段降到 8–14,输入 token 降约 55%。
+
+请求体:
+
+```js
+{
+  model: 'deepseek-flash',
+  temperature: 0,
+  response_format: { type: 'json_object' },
+  messages: [{ role: 'system', content: L0 + L1 }, { role: 'user', content: L2 + L3 }]
+}
+```
+
+schema 必须**同时以文字形式写进 system**,不能只依赖 `response_format`。
+
+## 八、输出契约
+
+```json
+{
+  "pageRange": [3, 7],
+  "fields": [
+    {
+      "key": "fin.revenue", "found": true, "period": 2025,
+      "value": 132000000, "unit": "CNY", "raw": "132,000,000.00",
+      "page": 5, "quote": "营业收入 132,000,000.00",
+      "confidence": 0.96
+    }
+  ],
+  "documentMeta": { "docType": "audit", "companyName": "...", "reportYear": 2025 },
+  "unreadable": [{ "page": 9, "reason": "扫描模糊" }]
+}
+```
+
+## 九、五级校验阶梯
+
+```
+1  JSON.parse 失败      → repair 一次(只输出修正后的 JSON)
+2  ajv 校验失败          → 带 errors 重试一次,仅重试失败字段
+3  语义校验(纯代码)     → unit 不在枚举 / page 超出页数 / period 非法 / value 非数值 → 丢弃并打标
+4  quote 匹配(仅文本通道) → 未命中 → confidence = min(conf, 0.5), flags: quote_unverified
+5  仍失败                → 该块标 failed,不影响其他块;UI 提示"第 5-7 页识别失败,可手动补录"
+```
+
+网络层:超时 120s(视觉 180s);429/5xx 退避 1s→4s→10s,3 次;其他 4xx 不重试。
+
+缓存键:`sha256(fileBytes) + promptVersion + model + fieldSubsetHash`。重复上传同一份文件零成本。
+
+## 十、报告层的数字白名单
+
+这是防幻觉的最后一道闸。
+
+- 输入**只给 `ScoreResult`**,禁传 evidence 原文(防止模型从原文"发现"新数字)
+- 正文数字必须用 `[[i:IND_21]]` / `[[g:GATE_3]]` 引用标记
+- 禁止四则运算出新数字(算涨价率、求总和都不行)
+- 输出后置校验:正则提取正文所有数字,逐个在 `ScoreResult` 数值集合(含 `1.32亿 / 132,000,000 / 11.86%` 等格式化变体)中查找,命中率 < 100% 即**丢弃该段,回退模板文案**
+
+**模板文案永远存在。** 报告 100% 可离线生成,AI 只做润色与建议段落。AI 挂了报告照样出 —— 这是单机工具的可靠性底线。
+
+## 十一、失败与隐私
+
+- 任何一页失败不阻塞整体:该页字段进"材料不足",用户可手动补录
+- 上传页明示"页面图像将发送至 DeepSeek API"
+- 提供「仅文本模式」:只抽文字层,不传图,数据不出本机;扫描件多的客户会丢字段,但可接受
+
+## 十二、一键评估的编排
+
+客户只点一次「开始评估」,`JobKind=assess` 在进程内按固定顺序跑完七个阶段,每段独立记录耗时与结果:
+
+| 阶段 | 动作 | 失败后果 |
+| --- | --- | --- |
+| parse | 逐文件解析成 PageDoc[] | 单文件失败只记告警,整体继续 |
+| industry | 从文本推断行业代码 | 推断不出用中性基准,不影响出分 |
+| extract | 分块调模型,候选只追加 | 证据为空,分数全按中性估算,作业标 partial |
+| confirm | 按 rankCandidate 自动确认 + 按年合并 | 字段停在候选态,人工可补 |
+| declared | 客户自述的知识产权件数与档位标记 | 已有文档证据时跳过 |
+| score | 纯函数引擎算分并落盘 | 作业标 failed |
+| advice | 生成补足建议 | 回落规则模板 |
+
+七段各自 try/catch,**单点失败不推翻整份结果**:解析或打分失败判 `failed`,抽取失败判 `partial`,其余照常出分。整份结果落 `assess.json`,结果页与 PDF 共用同一份。
+
+`confirmSeries` 是这一步的关键:模型对同一指标会吐出多个年份的候选,不合并成 `{2023,2024,2025}` 字典,成长性三项(15 分)就全废——引擎按年取数,单值取不到 `[y0]` 与 `[y1]`。
+
+## 十三、补足建议的生成
+
+建议是 AI 唯一写文字的地方,边界收得很紧:
+
+- 输入只有 8 条事实(指标名、当前值、目标值、可提升分数、状态),**不含 evidence 原文**
+- 正文 ≤150 字,禁止编造事实之外的数字
+- 输出后做数字白名单:文中每个数字必须能在事实表里找到(整型 0-12 与年份除外,其余允许 5% 误差),不过则重试一次
+- 两次都不过 → 整段换成 `config/advice.json` 的预置话术,`source` 标 `rule`
+- 按事实哈希缓存到 `cache/advice/<hash>.json`,同分同证据不重复调模型
+
+管理员自建项目没有 `assess.json` 时,接口以「不传 client」的方式调用同一函数,直接落规则模板——零 token、不写缓存,保证 GET 无副作用。
+
+## 十四、判型优先级与补充材料(2026-11)
+
+`docType` 决定抽哪些字段,优先级自上而下:
+
+| 来源 | 落点 | 说明 |
+| --- | --- | --- |
+| 上传时用户选择 | `docType` + `docTypeSource: 'user'` | `?docType=` 传入,最高优先 |
+| 文件名关键词 | `inferDocType(name)` | 每次抽取重新推导,不固化 |
+| 上次模型判断 | `file.docType` | 兜底,仅用于展示与分槽 |
+
+- 模型首块回判只做**并集**:`merge(旧子集, 新子集)`,不替换;误判 `tax` 不会丢 `fin.*`
+- `other` 子集从 3 个字段扩到 31 个(`company. / hr. / qual. / std. / ip.` + 关键财务),文件名无关键词也不再空转
+- `referenceOnly` 文件照常解析,但不进抽取、不进证据;上传加 `?reference=1`
+
+## 十五、营业执照预识别(2026-11)
+
+`POST /api/portal/recognize`(customer 角色)单文件直传，不进项目目录。
+
+- 复用 `pipeline/detect` 判型 + `parsePdf`/`parseImage`，只识别第 1 页；页数 > 3 直接拒绝。
+- 专用提示词一次取三字段：`identity.businessScope`、`identity.registeredCapital`(元)、`identity.establishedDate`。
+- 信用代码不参与预识别；只在评估阶段从税务/证书类材料抽取，供后台列表与搜索。
+- `identity.businessScope` 上限 4000 字(目录 `maxLength`)，其余文本字段仍为 2000。
+- 缓存 `data/cache/recognize/<sha256>.json`，默认 720 小时；限流每 clientId 20 次/小时。
+- 预识别结果只用于表单填写与展示；报告数据来自评估时对同一文件的重新抽取，两者不共用，因此不提供编辑入口。

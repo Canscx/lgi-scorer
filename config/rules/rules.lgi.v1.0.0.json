@@ -1,0 +1,806 @@
+{
+  "schemaVersion": "1.0.0",
+  "rulesId": "rules.lgi.v1.0.0",
+  "level": "LITTLE_GIANT",
+  "levelName": "专精特新“小巨人”企业",
+  "region": "CN",
+  "policyBasis": [
+    {
+      "doc": "优质中小企业梯度培育管理办法",
+      "no": "工信部企业〔2026〕2号",
+      "effectiveFrom": "2026-04-01",
+      "url": "https://www.miit.gov.cn/zwgk/zcwj/wjfb/tz/art/2026/art_5546b1a622ea4d73bd2ca395b73bd4eb.html"
+    },
+    {
+      "doc": "中小企业专精特新发展评价指标体系(企业)(试行)",
+      "no": "工信厅企业〔2024〕75号",
+      "effectiveFrom": "2026-04-01"
+    }
+  ],
+  "effectiveFrom": "2026-04-01",
+  "effectiveTo": null,
+  "status": "active",
+  "supersedes": null,
+  "passLine": 60,
+  "benchmarksRef": {
+    "file": "industry-benchmarks.v1.2.0.json",
+    "version": "1.2.0"
+  },
+  "policies": {
+    "weightModel": "dimensionShare",
+    "missingPolicy": "rangeBounds",
+    "rounding": {
+      "decimals": 2,
+      "mode": "half_up"
+    },
+    "cClassFallback": {
+      "score": 0.5,
+      "confidence": "estimated"
+    }
+  },
+  "gates": [
+    {
+      "id": "GATE_1",
+      "name": "前置资质与细分市场年限",
+      "type": "expr",
+      "logic": "all",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（一）",
+      "checks": [
+        {
+          "id": "G1a",
+          "label": "已获得专精特新中小企业称号",
+          "expr": "company.srdiTitle == true"
+        },
+        {
+          "id": "G1b",
+          "label": "截至上年末从事特定细分市场满 3 年",
+          "expr": "company.subMarketYears >= 3"
+        }
+      ]
+    },
+    {
+      "id": "GATE_2",
+      "name": "营收规模与业务聚焦",
+      "type": "expr",
+      "logic": "all",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（二）",
+      "checks": [
+        {
+          "id": "G2a",
+          "label": "上年度营业收入 ≥5000 万元（无股权融资替代路径）",
+          "expr": "fin.revenue[y0] >= 50000000"
+        },
+        {
+          "id": "G2b",
+          "label": "主营业务收入占营业收入比重 ≥90%",
+          "expr": "fin.mainBusinessRevenue[y0] / fin.revenue[y0] >= 0.90"
+        }
+      ]
+    },
+    {
+      "id": "GATE_3",
+      "name": "财务稳健与成长性",
+      "type": "expr",
+      "logic": "all",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（二）",
+      "checks": [
+        {
+          "id": "G3a",
+          "label": "上年末资产负债率 ≤75%",
+          "expr": "fin.assetLiabilityRatio[y0] <= 0.75"
+        }
+      ]
+    },
+    {
+      "id": "GATE_4",
+      "name": "营业收入复合增长率",
+      "type": "expr",
+      "logic": "all",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "reviewExempt": true,
+      "policyRef": "附件2-（二）",
+      "checks": [
+        {
+          "id": "G4a",
+          "label": "近两年营业收入复合增长率 ≥5%（复核企业不考查）",
+          "expr": "company.revenueCagr >= 0.05"
+        }
+      ]
+    },
+    {
+      "id": "GATE_5",
+      "name": "研发费用投入强度",
+      "type": "expr",
+      "logic": "all",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（三）",
+      "checks": [
+        {
+          "id": "G5a",
+          "label": "近两年研发费用合计 ≥1200 万元",
+          "expr": "fin.rdExpense[y0] + fin.rdExpense[y1] >= 12000000"
+        },
+        {
+          "id": "G5b",
+          "label": "上年度研发费用占营业收入 ≥3%",
+          "expr": "fin.rdExpense[y0] / fin.revenue[y0] >= 0.03"
+        },
+        {
+          "id": "G5c",
+          "label": "前年度研发费用占营业收入 ≥3%",
+          "expr": "fin.rdExpense[y1] / fin.revenue[y1] >= 0.03"
+        }
+      ]
+    },
+    {
+      "id": "GATE_6",
+      "name": "Ⅰ类知识产权或国家级科技奖励豁免",
+      "type": "expr",
+      "logic": "anyOf",
+      "unknownPolicy": "pending",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（四）",
+      "checks": [
+        {
+          "id": "G6a",
+          "label": "拥有 ≥4 项自主申请、权利人排名前三、非转入的Ⅰ类知识产权",
+          "expr": "count(ip.inventionI where selfApplied == true && applicantRank <= 3 && transferredIn == false) >= 4"
+        },
+        {
+          "id": "G6b",
+          "label": "近三年获国家级科技奖励且排名前三(豁免)",
+          "expr": "qual.nationalScienceAward == true",
+          "exemption": true
+        }
+      ]
+    },
+    {
+      "id": "GATE_7",
+      "name": "市场占有率与行业地位",
+      "type": "expr",
+      "logic": "anyOf",
+      "unknownPolicy": "pending",
+      "severity": "advisory",
+      "enabled": true,
+      "policyRef": "附件2-（五）",
+      "checks": [
+        {
+          "id": "G7a",
+          "label": "主导产品细分市场占有率 ≥10%",
+          "expr": "qual.marketShare >= 0.10"
+        },
+        {
+          "id": "G7b",
+          "label": "主导产品国内细分市场排名前三",
+          "expr": "qual.marketRanking == 'national_top3'"
+        }
+      ]
+    },
+    {
+      "id": "GATE_8",
+      "name": "产业链关键环节属性",
+      "type": "expr",
+      "logic": "anyOf",
+      "unknownPolicy": "pending",
+      "severity": "advisory",
+      "enabled": true,
+      "policyRef": "附件2-（六）",
+      "checks": [
+        {
+          "id": "G8a",
+          "label": "主导产品属“六基”领域(核心基础零部件/元器件/关键软件/先进基础工艺/关键基础材料/产业技术基础)",
+          "expr": "qual.chainSixBase == true"
+        },
+        {
+          "id": "G8b",
+          "label": "主导产品属传统产业升级、新兴产业或未来产业，位于产业链关键环节",
+          "expr": "qual.chainKeySegment == true"
+        }
+      ]
+    },
+    {
+      "id": "GATE_9",
+      "name": "专精特新发展评价得分",
+      "type": "scoreGate",
+      "passLine": 60,
+      "totalKey": "official",
+      "unknownPolicy": "notPass",
+      "severity": "hard",
+      "enabled": true,
+      "policyRef": "附件2-（七）"
+    }
+  ],
+
+  "dimensions": [
+    {
+      "id": "DIM_PROFESSION",
+      "name": "专业化",
+      "weight": 15,
+      "indicators": [
+        {
+          "id": "IND_01",
+          "code": 1,
+          "name": "从事细分市场年限",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "year",
+          "aggregation": { "method": "last" },
+          "formula": { "expr": "company.subMarketYears", "inputs": ["company.subMarketYears"] },
+          "scoring": {
+            "type": "piecewise",
+            "points": [[0, 0], [2, 0.2], [4, 0.4], [6, 0.6], [8, 0.8], [10, 1]],
+            "clamp": [0, 1],
+            "tail": "hold"
+          },
+          "evidenceRefs": ["company.subMarketYears"],
+          "explain": { "template": "从事细分市场 {raw} 年" }
+        },
+        {
+          "id": "IND_02",
+          "code": 2,
+          "name": "细分行业营业收入排名",
+          "share": 1,
+          "dataClass": "C",
+          "unit": "enum",
+          "scoring": {
+            "type": "manualTier",
+            "maxPoints": 10,
+            "options": [
+              { "key": "national_top3", "points": 10, "label": "全国前三" },
+              { "key": "province_top3", "points": 10, "label": "省内前三" },
+              { "key": "province_top5", "points": 7, "label": "省内前五" },
+              { "key": "province_top10", "points": 4, "label": "省内前十" },
+              { "key": "none", "points": 1, "label": "未进入前列" }
+            ]
+          },
+          "evidenceRefs": ["qual.marketRanking"],
+          "fallback": {
+            "type": "neutral",
+            "score": 0.5,
+            "confidence": "estimated",
+            "reason": "细分行业排名依赖全行业企业库,第三方无法取得"
+          }
+        },
+        {
+          "id": "IND_03",
+          "code": 3,
+          "name": "发明专利集中度",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "ratio",
+          "aggregation": { "method": "last" },
+          "formula": {
+            "expr": "sum((ipc_i / total)^2)",
+            "inputs": ["ip.ipcDistribution", "ip.inventionFirstApplicant"],
+            "guard": "ip.inventionFirstApplicant > 0"
+          },
+          "scoring": {
+            "type": "hhi",
+            "distributionRef": "ip.ipcDistribution",
+            "totalRef": "ip.inventionFirstApplicant",
+            "points": [[0, 0], [0.15, 0.4], [0.35, 0.75], [0.6, 1]]
+          },
+          "evidenceRefs": ["ip.ipcDistribution", "ip.inventionFirstApplicant"],
+          "explain": { "template": "发明专利按 IPC 大类分布的赫芬达尔指数 {raw}" }
+        },
+        {
+          "id": "IND_04",
+          "code": 4,
+          "name": "主持或参与制修订标准数量",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "point",
+          "scoring": {
+            "type": "formulaSum",
+            "terms": [
+              { "ref": "std.hostedIntl#count", "coef": 5 },
+              { "ref": "std.hostedNatInd#count", "coef": 3 },
+              { "ref": "std.joinedIntl#count", "coef": 2 },
+              { "ref": "std.joinedNatInd#count", "coef": 1 }
+            ],
+            "cap": 10
+          },
+          "evidenceRefs": ["std.hostedIntl", "std.hostedNatInd", "std.joinedIntl", "std.joinedNatInd"],
+          "explain": { "template": "标准计分 {raw} 分(国际主持×5 + 国家/行业主持×3 + 国际参与×2 + 国家/行业参与×1)" }
+        }
+      ]
+    },
+    {
+      "id": "DIM_REFINE",
+      "name": "精细化",
+      "weight": 20,
+      "indicators": [
+        {
+          "id": "IND_05",
+          "code": 5,
+          "name": "人均营业收入超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "CNY/person",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "mean(fin.revenue) / mean(company.employeeYearAvg)",
+            "inputs": ["fin.revenue", "company.employeeYearAvg"],
+            "guard": "company.employeeYearAvg > 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "revenuePerEmployee",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.revenue", "company.employeeYearAvg"],
+          "explain": { "template": "人均营业收入 {raw} 元/人,行业均值 {benchmark} 元/人" }
+        },
+        {
+          "id": "IND_06",
+          "code": 6,
+          "name": "净资产收益率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "mean(fin.netProfit) / mean(fin.netAssets)",
+            "inputs": ["fin.netProfit", "fin.netAssets"],
+            "guard": "fin.netAssets > 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "roe",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.netProfit", "fin.netAssets"],
+          "explain": { "template": "净资产收益率 {raw},行业均值 {benchmark}" }
+        },
+        {
+          "id": "IND_07",
+          "code": 7,
+          "name": "成本利润率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "mean(fin.totalProfit) / mean(fin.productSalesCost)",
+            "inputs": ["fin.totalProfit", "fin.productSalesCost"],
+            "guard": "fin.productSalesCost > 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "costProfitMargin",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.totalProfit", "fin.productSalesCost"],
+          "explain": { "template": "成本利润率 {raw},行业均值 {benchmark}" }
+        },
+        {
+          "id": "IND_08",
+          "code": 8,
+          "name": "销售和管理费用率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "(mean(fin.salesExpense) + mean(fin.adminExpense)) / mean(fin.revenue)",
+            "inputs": ["fin.salesExpense", "fin.adminExpense", "fin.revenue"],
+            "guard": "fin.revenue > 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "negative",
+            "benchmarkKey": "expenseRatio",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.salesExpense", "fin.adminExpense", "fin.revenue"],
+          "explain": { "template": "销售+管理费用率 {raw},行业均值 {benchmark}(越低越好)" }
+        },
+        {
+          "id": "IND_09",
+          "code": 9,
+          "name": "企业获得质量管理体系认证情况",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "enum",
+          "scoring": {
+            "type": "tier",
+            "maxPoints": 10,
+            "tiers": [
+              { "when": "qual.qualityAward == 'national_award'", "points": 10, "label": "国家级质量奖或质量管理能力卓越级" },
+              { "when": "qual.qualityAward == 'province_award'", "points": 5, "label": "省级质量奖或质量管理能力预防级" },
+              { "when": "qual.qualityAward == 'assurance'", "points": 3, "label": "质量管理能力保证级" },
+              { "when": "qual.qualityAward == 'iso9001'", "points": 1, "label": "ISO9001 等体系认证或检验级" },
+              { "when": "true", "points": 0, "label": "其他" }
+            ]
+          },
+          "evidenceRefs": ["qual.qualityAward"],
+          "explain": { "template": "质量管理认证等级 {raw},取最高不累加" }
+        },
+        {
+          "id": "IND_10",
+          "code": 10,
+          "name": "产品获得权威机构认证情况",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "bool",
+          "scoring": {
+            "type": "tier",
+            "maxPoints": 10,
+            "tiers": [
+              { "when": "qual.productCert == true", "points": 10, "label": "获发达国家或地区权威机构认证" },
+              { "when": "true", "points": 0, "label": "未获得" }
+            ]
+          },
+          "evidenceRefs": ["qual.productCert"],
+          "explain": { "template": "产品权威认证:{raw}" }
+        }
+      ]
+    },
+    {
+      "id": "DIM_SPECIAL",
+      "name": "特色化",
+      "weight": 15,
+      "indicators": [
+        {
+          "id": "IND_11",
+          "code": 11,
+          "name": "毛利率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "(mean(fin.revenue) - mean(fin.operatingCost)) / mean(fin.revenue)",
+            "inputs": ["fin.revenue", "fin.operatingCost"],
+            "guard": "fin.revenue > 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "grossMargin",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.revenue", "fin.operatingCost"],
+          "explain": { "template": "毛利率 {raw},行业均值 {benchmark}" }
+        },
+        {
+          "id": "IND_12",
+          "code": 12,
+          "name": "数字化转型评测得分或相关称号",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "enum",
+          "scoring": {
+            "type": "manualTier",
+            "maxPoints": 10,
+            "options": [
+              { "key": "ministry_title", "points": 10, "label": "部级智能工厂/5G 工厂/智能制造优秀场景" },
+              { "key": "lianghua_90", "points": 10, "label": "两化融合水平 ≥90 或通过贯标" },
+              { "key": "province_digital", "points": 6, "label": "省级数字化转型认定" },
+              { "key": "city_digital", "points": 4, "label": "市级数字化转型认定" },
+              { "key": "scored", "points": 3, "label": "仅完成数字化水平评测自测" },
+              { "key": "none", "points": 0, "label": "无" }
+            ]
+          },
+          "evidenceRefs": ["qual.digitalTransformation"],
+          "explain": { "template": "数字化水平:{raw}" }
+        },
+        {
+          "id": "IND_13",
+          "code": 13,
+          "name": "绿色化标杆称号",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "count",
+          "scoring": {
+            "type": "formulaSum",
+            "terms": [{ "ref": "qual.greenTitles#count", "coef": 0.5 }],
+            "cap": 2
+          },
+          "evidenceRefs": ["qual.greenTitles"],
+          "explain": { "template": "绿色化称号 {raw} 项,每项计 0.5 分,上限 2 分" }
+        },
+        {
+          "id": "IND_14",
+          "code": 14,
+          "name": "PCT 专利数量",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "count",
+          "aggregation": { "method": "last" },
+          "formula": { "expr": "ip.pctCount", "inputs": ["ip.pctCount"] },
+          "scoring": {
+            "type": "piecewise",
+            "points": [[0, 0], [1, 0.5], [3, 0.8], [5, 1]],
+            "clamp": [0, 1],
+            "tail": "hold"
+          },
+          "evidenceRefs": ["ip.pctCount"],
+          "explain": { "template": "PCT 专利 {raw} 件" }
+        }
+      ]
+    },
+    {
+      "id": "DIM_INNOVATION",
+      "name": "创新能力",
+      "weight": 35,
+      "indicators": [
+        {
+          "id": "IND_15",
+          "code": 15,
+          "name": "研发投入",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "CNY",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": { "expr": "mean(fin.rdExpense)", "inputs": ["fin.rdExpense"] },
+          "scoring": {
+            "type": "piecewise",
+            "points": [[1000000, 0.3], [3000000, 0.55], [5000000, 0.7], [10000000, 0.85], [20000000, 1]],
+            "clamp": [0, 1],
+            "tail": "hold"
+          },
+          "evidenceRefs": ["fin.rdExpense"],
+          "explain": { "template": "近三年研发费用均值 {raw} 元" }
+        },
+        {
+          "id": "IND_16",
+          "code": 16,
+          "name": "研发投入占比",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "percent",
+          "aggregation": { "window": ["y0", "y1", "y2"], "method": "mean" },
+          "formula": {
+            "expr": "mean(fin.rdExpense / fin.revenue)",
+            "inputs": ["fin.rdExpense", "fin.revenue"],
+            "guard": "fin.revenue > 0"
+          },
+          "scoring": {
+            "type": "piecewise",
+            "points": [[0, 0], [0.03, 0.25], [0.05, 0.45], [0.08, 0.7], [0.1, 0.85], [0.15, 1]],
+            "clamp": [0, 1],
+            "tail": "hold"
+          },
+          "evidenceRefs": ["fin.rdExpense", "fin.revenue"],
+          "explain": { "template": "近三年研发投入占营业收入均值 {raw}" }
+        },
+        {
+          "id": "IND_17",
+          "code": 17,
+          "name": "有效知识产权数量",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "point",
+          "scoring": {
+            "type": "tier",
+            "maxPoints": 10,
+            "tiers": [
+              { "when": "ip.classICount >= 4 && ip.highValueI == true", "points": 10, "label": "Ⅰ类高价值知识产权 ≥4 项（同时满足小巨人门槛）" },
+              { "when": "ip.classICount >= 4 && ip.selfDevelopedI == true", "points": 8, "label": "自主研发Ⅰ类知识产权 ≥4 项" },
+              { "when": "ip.classICount >= 4", "points": 7, "label": "Ⅰ类知识产权 ≥4 项（达小巨人门槛）" },
+              { "when": "ip.classICount >= 1 && ip.classICount <= 3", "points": 3, "label": "Ⅰ类知识产权 1–3 项（未达 4 项门槛）" },
+              { "when": "ip.classICount == 0 && ip.classIICount >= 1", "points": 1, "label": "仅Ⅱ类知识产权（不满足门槛）" },
+              { "when": "true", "points": 0, "label": "无有效知识产权" }
+            ]
+          },
+          "evidenceRefs": ["ip.classICount", "ip.classIICount", "ip.selfDevelopedI", "ip.highValueI"],
+          "explain": { "template": "知识产权档位：{raw}（就高不叠加，满分 10）" }
+        },
+        {
+          "id": "IND_18",
+          "code": 18,
+          "name": "发明专利网络点度中心度",
+          "share": 1,
+          "dataClass": "C",
+          "unit": "count",
+          "formula": { "expr": "ip.citationEdges", "inputs": ["ip.citationEdges"] },
+          "scoring": {
+            "type": "piecewise",
+            "points": [[0, 0], [1, 0.4], [5, 0.7], [20, 1]],
+            "clamp": [0, 1],
+            "tail": "hold"
+          },
+          "evidenceRefs": ["ip.citationEdges"],
+          "fallback": {
+            "type": "exclude",
+            "confidence": "unknown",
+            "reason": "需专利引用数据库,本工具不估算,不计入参考得分"
+          }
+        },
+        {
+          "id": "IND_19",
+          "code": 19,
+          "name": "研发机构建设水平",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "enum",
+          "scoring": {
+            "type": "tier",
+            "maxPoints": 10,
+            "tiers": [
+              { "when": "qual.rdInstitution == 'national'", "points": 10, "label": "国家级实验室或研发中心" },
+              { "when": "qual.rdInstitution == 'province'", "points": 5, "label": "省部级实验室或研发中心" },
+              { "when": "qual.rdInstitution == 'self_built'", "points": 3, "label": "自建研发机构" },
+              { "when": "true", "points": 0, "label": "其他" }
+            ]
+          },
+          "evidenceRefs": ["qual.rdInstitution"],
+          "explain": { "template": "研发机构级别 {raw},取最高不累加" }
+        },
+        {
+          "id": "IND_20",
+          "code": 20,
+          "name": "研发人员数量及占比",
+          "share": 1,
+          "dataClass": "A",
+          "unit": "composite",
+          "scoring": {
+            "type": "composite",
+            "parts": [
+              {
+                "weight": 0.5,
+                "scoring": {
+                  "type": "piecewise",
+                  "points": [[0, 0], [5, 0.2], [10, 0.4], [20, 0.6], [50, 0.8], [100, 1]],
+                  "clamp": [0, 1],
+                  "tail": "hold"
+                }
+              },
+              {
+                "weight": 0.5,
+                "scoring": {
+                  "type": "piecewise",
+                  "points": [[0, 0], [0.05, 0.3], [0.1, 0.55], [0.15, 0.75], [0.2, 0.9], [0.3, 1]],
+                  "clamp": [0, 1],
+                  "tail": "hold"
+                }
+              }
+            ]
+          },
+          "evidenceRefs": ["hr.rdHeadcount", "hr.totalHeadcount"],
+          "explain": { "template": "研发人员 {raw} 人,占职工总数 {ratio}" }
+        }
+      ]
+    },
+    {
+      "id": "DIM_GROWTH",
+      "name": "成长性",
+      "weight": 15,
+      "indicators": [
+        {
+          "id": "IND_21",
+          "code": 21,
+          "name": "营业收入增长率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "formula": {
+            "expr": "(fin.revenue[y0] - fin.revenue[y1]) / abs(fin.revenue[y1])",
+            "inputs": ["fin.revenue"],
+            "guard": "fin.revenue[y1] != 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "revenueGrowth",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.revenue"],
+          "explain": { "template": "营业收入增长率 {raw},行业均值 {benchmark}" }
+        },
+        {
+          "id": "IND_22",
+          "code": 22,
+          "name": "利润增长率超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "formula": {
+            "expr": "(fin.totalProfit[y0] - fin.totalProfit[y1]) / abs(fin.totalProfit[y1])",
+            "inputs": ["fin.totalProfit"],
+            "guard": "fin.totalProfit[y1] != 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "profitGrowth",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.totalProfit"],
+          "explain": { "template": "利润增长率 {raw},行业均值 {benchmark}" }
+        },
+        {
+          "id": "IND_23",
+          "code": 23,
+          "name": "净资产增速超行业均值",
+          "share": 1,
+          "dataClass": "B",
+          "unit": "percent",
+          "formula": {
+            "expr": "(fin.netAssets[y0] - fin.netAssets[y1]) / abs(fin.netAssets[y1])",
+            "inputs": ["fin.netAssets"],
+            "guard": "fin.netAssets[y1] != 0"
+          },
+          "scoring": {
+            "type": "benchmark",
+            "direction": "positive",
+            "benchmarkKey": "netAssetGrowth",
+            "curve": { "base": 0.6, "kUp": 0.5, "kDown": 1.0 }
+          },
+          "evidenceRefs": ["fin.netAssets"],
+          "explain": { "template": "净资产增速 {raw},行业均值 {benchmark}" }
+        }
+      ]
+    }
+  ],
+  "assumptions": [
+    {
+      "id": "A1",
+      "text": "五个一级维度权重取自二手来源(专业化15%、精细化20%、特色化15%、创新能力35%、成长性15%),合计100。工信部仅公开“从专业化、精细化、特色化、创新能力、成长性等方面设置20余项指标”,未公开权重表。三级指标权重同样未公开,采用维度内等权。",
+      "impact": "参考得分与培育平台计算结果不可直接比对,仅作自查参考,不得用于申报材料中的自评分数填报。"
+    },
+    {
+      "id": "A2",
+      "text": "评价体系为五大维度23项三级指标(专业化4项、精细化6项、特色化4项、创新能力6项、成长性3项)。官方解读称“20余项指标”;中国政府网转载光明日报提及“设置23个指标,其中4个指标考察企业知识产权情况,权重为18%”。",
+      "impact": "指标数量与知识产权权重的最初来源均为二手转述,官方公开指标表后需重排。"
+    },
+    {
+      "id": "A3",
+      "text": "评价不含加分项(附件3第十项)。本工具不设任何手工加分入口。",
+      "impact": "全部得分只来自指标计算,不存在人为调分。"
+    },
+    {
+      "id": "A4",
+      "text": "“六基”与产业链关键环节门槛(附件2第六项)判定依据为企业自述,官方口径为如实说明即可,本工具按提示项处理,不参与达标结论。",
+      "impact": "该条只做提醒,不因未填而判为不合格,避免误判。"
+    },
+    {
+      "id": "A5",
+      "text": "市场占有率门槛(附件2第五项)官方附件3明确“企业如实说明即可”,2026年申报通知亦免交占有率证明,本工具按提示项处理,不要求第三方证明。",
+      "impact": "市占率未填不影响达标结论,但结果页会提示需如实说明。"
+    },
+    {
+      "id": "A6",
+      "text": "Ⅰ类知识产权口径按附件3第七项:不包含转入的Ⅰ类知识产权,且申请企业应在权利人中排名前三。范围含发明专利(含国防专利)、植物新品种、国家级农作物品种、国家新药、国家一级中药保护品种、集成电路布图设计专有权。",
+      "impact": "转入专利不得计入门槛,也不得计入指标17的高档位。"
+    },
+    {
+      "id": "A7",
+      "text": "国家级科技奖励豁免仅认国家级(国家科技进步奖、国家自然科学奖、国家技术发明奖、国防科技奖)且排名前三。省部级奖励豁免仅适用于专精特新中小企业(附件1),不适用于小巨人。",
+      "impact": "省部级奖励在小巨人评估中不构成豁免。"
+    },
+    {
+      "id": "A8",
+      "text": "复核口径与申请口径的差异:近两年营业收入复合增长率(附件2第二项)明确“复核企业不考查”;评价得分60分门槛复核企业按“近两年任意一年达标”判定。",
+      "impact": "评估时需选择申请类型,复核类型会自动豁免复合增长率并放宽分数判定。"
+    },
+    {
+      "id": "A9",
+      "text": "B类“超出行业均值”映射曲线参数(base=0.60,kUp=0.50,kDown=1.00)为本工具设定:等于均值得0.6,高出50%得满分,低于均值100%归零。官方仅给出比较方向,未给出函数形态。行业基准数值来自公开统计与行业报告估算,非官方数据。",
+      "impact": "基准偏差会系统性影响8项B类指标约32分,报告以三口径区间呈现。"
+    },
+    {
+      "id": "A10",
+      "text": "指标17知识产权档位按小巨人门槛重排:Ⅰ类≥4项且高价值10分、Ⅰ类≥4项自主研发8分、Ⅰ类≥4项7分、Ⅰ类1-3项3分、仅Ⅱ类1分、无0分,不叠加。",
+      "impact": "4项红线已嵌入档位,不会出现门槛不过而该项满分的情形。"
+    }
+  ]
+}

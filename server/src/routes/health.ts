@@ -1,0 +1,33 @@
+import { Router } from 'express'
+import { APP_VERSION, SERVICE_NAME, STAGE } from '@lgi/shared'
+import type { HealthResponse } from '@lgi/shared'
+import { loadRulesSummary } from '../config/rules'
+
+export const healthRouter = (port: number, dataDir: string, commit: string | null) => {
+  const router = Router()
+  const rules = loadRulesSummary()
+
+  router.get('/health', (_req, res) => {
+    const payload: HealthResponse = {
+      ok: true,
+      service: SERVICE_NAME,
+      version: APP_VERSION,
+      stage: STAGE,
+      rules,
+      runtime: {
+        node: process.version,
+        uptimeSec: Math.round(process.uptime()),
+        pid: process.pid,
+        port,
+        commit
+      },
+      storage: {
+        dataDir
+      },
+      time: new Date().toISOString()
+    }
+    res.json(payload)
+  })
+
+  return router
+}
