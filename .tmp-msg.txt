@@ -1,0 +1,8 @@
+feat(batch5): 新增专精特新 vs 小巨人差异对照页, 默认折叠
+
+- shared/src/compare.ts: 新建, 三节完整对照(基础定位 4 条 / 硬性门槛 12 条 / 评价机制 6 条) + 八项关键差异
+- web/src/views/CompareView.vue: 新建, 关键差异表常显, 三张完整表默认折叠点击展开
+- router.ts + App.vue: 新增 #/compare 路由, 归入客户侧
+- Home.vue: 首页 hero 增加「专精特新 vs 小巨人，差在哪」入口
+
+验证: 实机渲染确认八项关键差异表 + 三张折叠表正常; pnpm typecheck 三包通过

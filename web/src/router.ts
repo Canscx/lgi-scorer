@@ -10,6 +10,7 @@ export type RouteName =
   | 'review'
   | 'score'
   | 'status'
+  | 'compare'
 
 export interface RouteState {
   name: RouteName
@@ -29,6 +30,7 @@ const parse = (): RouteState => {
   if (review) return { name: 'review', projectId: review[1] }
   const score = /^\/p\/([A-Za-z0-9_-]+)\/score\/?$/.exec(hash)
   if (score) return { name: 'score', projectId: score[1] }
+  if (/^\/compare\/?$/.test(hash)) return { name: 'compare' }
   if (/^\/status\/?$/.test(hash)) return { name: 'status' }
   if (/^\/projects\/?$/.test(hash)) return { name: 'projects' }
   return { name: 'portal-home' }

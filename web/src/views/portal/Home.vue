@@ -185,6 +185,9 @@ onMounted(load)
         填企业信息、传几份材料，系统会自动识别财务数据，按官方七项认定标准逐条判定，
         并给出距离 {{ passLine ?? 60 }} 分参考线还差什么、怎么补。
       </p>
+      <button class="compare-link" type="button" @click="goto('/compare')">
+        专精特新 vs 小巨人，差在哪 →
+      </button>
     </header>
 
     <p v-if="loadError" class="banner">{{ loadError }}</p>
@@ -451,6 +454,24 @@ onMounted(load)
   font-size: 13px;
   line-height: 1.8;
   color: #64748b;
+}
+
+.compare-link {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+
+.compare-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
 .banner {

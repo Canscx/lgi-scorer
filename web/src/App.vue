@@ -14,6 +14,7 @@ import SubmissionsView from '@/views/admin/Submissions.vue'
 import PortalHome from '@/views/portal/Home.vue'
 import PortalAssessing from '@/views/portal/Assessing.vue'
 import PortalResult from '@/views/portal/Result.vue'
+import CompareView from '@/views/CompareView.vue'
 
 const route = useRoute()
 const { state, ensure, reset } = useSession()
@@ -24,11 +25,12 @@ const isCustomer = computed(() => state.value.role === 'customer')
 const authenticated = computed(() => state.value.authenticated)
 
 const ADMIN_ROUTES = ['projects', 'review', 'score', 'status', 'admin-submissions']
-const PORTAL_ROUTES = ['portal-home', 'portal-assessing', 'portal-result']
+const PORTAL_ROUTES = ['portal-home', 'portal-assessing', 'portal-result', 'compare']
 
 const portalView = computed(() => {
   if (route.value.name === 'portal-assessing') return PortalAssessing
   if (route.value.name === 'portal-result') return PortalResult
+  if (route.value.name === 'compare') return CompareView
   return PortalHome
 })
 
