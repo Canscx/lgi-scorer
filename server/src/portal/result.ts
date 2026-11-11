@@ -35,6 +35,8 @@ const SLOT_DOCS: Record<string, string[]> = {
   extra: ['patent', 'cert', 'standard', 'application', 'other', 'hr']
 }
 
+const SLOT_ALWAYS_CHECK = new Set(['srdiCert', 'marketShare', 'chainKey'])
+
 const markOf = (item: IndicatorResult): PortalMark | null => {
   if (item.status === 'excluded') return null
   if (item.basis === 'absent' || item.basis === 'substituted') return 'missing'
@@ -63,6 +65,7 @@ const missingSlotsOf = (project: ProjectMeta) => {
   return config.slots
     .filter((slot) => {
       if (slots.has(slot.id)) return false
+      if (SLOT_ALWAYS_CHECK.has(slot.id)) return true
       const allowed = SLOT_DOCS[slot.id]
       if (!allowed || allowed.length === 0) return false
       return !allowed.some((docType) => docTypes.has(docType))

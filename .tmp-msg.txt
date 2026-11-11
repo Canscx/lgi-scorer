@@ -1,10 +1,12 @@
-docs(batch6): 部署文档与技术文档全面改为小巨人口径
+fix: 小巨人专属槽位纳入缺失检测
 
-- deploy/宝塔部署教程.md: 重写, 加入与专精特新站共存的检查清单(端口 8788 / pm2 lgi / 目录前缀)
-- deploy/README.md: 重写, 补充九道门槛说明、双账号、8788 端口、排错新增「打开的是另一个站」
-- .env.example: 端口改 8788, 补全四个账号变量与分组注释
-- docs/scoring.md: 重写前三节(九项门槛三层结构 / 硬门槛与提示项 / 三种门槛开关 / 权重来源声明 / IND_17 四项红线), 后续章节顺延
-- docs/architecture.md: cookie 名与门槛数量同步
-- scripts/build-portable.mjs + smoke-web.mjs: srdi 前缀改 lgi
+- server/src/portal/result.ts: missingSlotsOf 对 srdiCert / marketShare / chainKey 三个槽位始终检查
+  (这三个槽位没有 docType 映射, 原逻辑会因 allowed 为空而跳过, 导致必传的证书缺失不提示)
 
-验证: pnpm validate 通过, shared 162 + server 154 测试全绿
+端到端验收(11 份真实材料):
+- 上传 11 份全部成功, 解析 44 页 0 失败
+- 行业识别 I65 软件和信息技术服务业
+- 未配置 AI Key 时抽取值全空, 门槛正确判 5 fail / 2 pending, 提示项不参与结论
+- missingSlots 正确返回 srdiCert(必传) + marketShare + chainKey
+
+验证: pnpm validate 通过
