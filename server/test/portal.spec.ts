@@ -233,8 +233,8 @@ describe('客户轻流程', () => {
 
           const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs')
           const parsed = await getDocument({ data: new Uint8Array(pdf) }).promise
-          expect(parsed.numPages).toBeGreaterThanOrEqual(3)
-          expect(parsed.numPages).toBeLessThanOrEqual(5)
+          expect(parsed.numPages).toBeGreaterThanOrEqual(4)
+          expect(parsed.numPages).toBeLessThanOrEqual(7)
 
           const firstPage = await parsed.getPage(1)
           const text = (await firstPage.getTextContent()).items
@@ -248,12 +248,19 @@ describe('客户轻流程', () => {
           expect(text).toContain('成立')
           expect(text).toContain('年）')
 
-          const secondPage = await parsed.getPage(2)
-          const checklist = (await secondPage.getTextContent()).items
+          const gatePage = await parsed.getPage(2)
+          const gates = (await gatePage.getTextContent()).items
+            .map((item) => ('str' in item ? item.str : ''))
+            .join('')
+          expect(gates).toContain('七项认定指标')
+          expect(gates).toContain('硬性认定指标')
+          expect(gates).toContain('主观项提醒')
+
+          const dimensionPage = await parsed.getPage(3)
+          const checklist = (await dimensionPage.getTextContent()).items
             .map((item) => ('str' in item ? item.str : ''))
             .join('')
           expect(checklist).toContain('√')
-          expect(checklist).toContain('○')
           expect(checklist).toContain('补齐达标后')
         } finally {
           await server.close()

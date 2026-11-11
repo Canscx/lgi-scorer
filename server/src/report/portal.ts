@@ -140,7 +140,7 @@ const identityPanel = (doc: PDFKit.PDFDocument, y: number, data: PortalResultRes
 }
 
 const renderCover = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
-  let y = header(doc, '专精特新中小企业 · 申报自评报告')
+  let y = header(doc, '专精特新“小巨人” · 申报自评报告')
   const score = data.score
 
   doc.fontSize(19).fillColor(COLOR.ink).text(data.company.name, M, y, { width: CW })
@@ -255,6 +255,106 @@ const renderCover = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
         listY += 20
       }
     }
+  }
+}
+
+const GATE_ORDER = ['GATE_1', 'GATE_2', 'GATE_3', 'GATE_4', 'GATE_5', 'GATE_6', 'GATE_9']
+const ADVISORY_ORDER = ['GATE_7', 'GATE_8']
+
+const GATE_MARK: Record<string, { text: string; color: string }> = {
+  pass: { text: '√', color: COLOR.pass },
+  fail: { text: '×', color: COLOR.missing },
+  pending: { text: '!', color: COLOR.gap },
+  unknown: { text: '?', color: COLOR.muted }
+}
+
+const GATE_LABEL: Record<string, string> = {
+  pass: '满足',
+  fail: '不满足',
+  pending: '需确认',
+  unknown: '材料不足'
+}
+
+const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
+  const summary = data.gateSummary
+  if (!summary) return
+
+  doc.addPage()
+  const label = summary.applicationType === 'review' ? '到期复核' : '本年度新申请'
+  let y = header(doc, '一、七项认定指标 · ' + label)
+  y = sectionTitle(doc, y, '硬性认定指标（官方要求同时满足）')
+
+  const hard = [...summary.gates.filter((gate) => gate.severity === 'hard')].sort(
+    (a, b) => GATE_ORDER.indexOf(a.id) - GATE_ORDER.indexOf(b.id)
+  )
+
+  for (const gate of hard) {
+    const mark = GATE_MARK[gate.verdict] ?? GATE_MARK.unknown
+    const body = gate.skipped && gate.skipReason ? gate.explain + '（' + gate.skipReason + '）' : gate.explain
+    const height = doc.fontSize(8.4).heightOfString(body, { width: CW - 108 }) + 8
+    const next = gap(doc, y, Math.max(30, height))
+    doc = next.doc
+    y = next.y
+
+    doc.fontSize(11).fillColor(mark.color).text(mark.text, M, y - 1, { width: 14 })
+    doc.fontSize(9).fillColor(COLOR.ink).text(gate.name, M + 18, y, { width: CW - 108 })
+    doc.fontSize(8.4).fillColor(COLOR.muted).text(GATE_LABEL[gate.verdict] ?? '', PAGE.width - M - 76, y, {
+      width: 76,
+      align: 'right'
+    })
+    y += 13
+    doc.fontSize(8.4).fillColor(COLOR.muted).text(body, M + 18, y, { width: CW - 108, lineGap: 2 })
+    y += doc.heightOfString(body, { width: CW - 108, lineGap: 2 }) + 8
+    doc.moveTo(M, y - 4).lineTo(PAGE.width - M, y - 4).lineWidth(0.4).strokeColor(COLOR.line).stroke()
+  }
+
+  y += 10
+  const advisory = [...summary.gates.filter((gate) => gate.severity === 'advisory')].sort(
+    (a, b) => ADVISORY_ORDER.indexOf(a.id) - ADVISORY_ORDER.indexOf(b.id)
+  )
+
+  if (advisory.length > 0) {
+    const block = gap(doc, y, 70)
+    doc = block.doc
+    y = block.y
+
+    doc.rect(M, y, CW, 22).fill('#fffdf5')
+    doc.fontSize(9).fillColor(COLOR.gap).text('主观项提醒（不影响达标结论）', M + 8, y + 6, { width: CW - 16 })
+    y += 28
+    doc.fontSize(8).fillColor(COLOR.muted).text(
+      '官方口径为企业如实说明即可，本工具按提示项处理，不作否决。',
+      M,
+      y,
+      { width: CW }
+    )
+    y += 14
+
+    for (const gate of advisory) {
+      const mark = GATE_MARK[gate.verdict] ?? GATE_MARK.unknown
+      const body = gate.explain
+      const next = gap(doc, y, 34)
+      doc = next.doc
+      y = next.y
+      doc.fontSize(11).fillColor(mark.color).text(mark.text, M, y - 1, { width: 14 })
+      doc.fontSize(8.8).fillColor(COLOR.body).text(gate.name, M + 18, y, { width: CW - 108 })
+      doc.fontSize(8.4).fillColor(COLOR.muted).text(GATE_LABEL[gate.verdict] ?? '', PAGE.width - M - 76, y, {
+        width: 76,
+        align: 'right'
+      })
+      y += 13
+      doc.fontSize(8.2).fillColor(COLOR.muted).text(body, M + 18, y, { width: CW - 108, lineGap: 2 })
+      y += doc.heightOfString(body, { width: CW - 108, lineGap: 2 }) + 6
+    }
+  }
+
+  if (summary.applicationType === 'review') {
+    y += 12
+    doc.fontSize(8.2).fillColor(COLOR.muted).text(
+      '复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。',
+      M,
+      y,
+      { width: CW, lineGap: 2 }
+    )
   }
 }
 
@@ -375,29 +475,29 @@ const renderMaterials = (doc: PDFKit.PDFDocument, data: PortalResultResponse) =>
     ...(licenseCount > 0
       ? [{ id: 'license', title: '营业执照（企业身份信息）', optional: true }]
       : []),
+    { id: 'srdiCert', title: '专精特新中小企业证书（前置资质）', optional: false },
     { id: 'finance', title: '财务报表（近三年年报）', optional: false },
     { id: 'tax', title: '企业所得税年度申报表', optional: false },
     { id: 'ledger', title: '账簿与科目余额表', optional: true },
+    { id: 'marketShare', title: '市场占有率说明（主观项）', optional: true },
+    { id: 'chainKey', title: '产业链关键环节说明（主观项）', optional: true },
     { id: 'extra', title: '其他补充材料', optional: true }
   ]
 
   doc.fontSize(9)
   for (const slot of slots) {
     const isMissing = missing.has(slot.id)
-    const mark = slot.optional && slot.id === 'ledger' ? '—' : isMissing ? '○' : '√'
-    const color =
-      slot.optional && slot.id === 'ledger'
-        ? COLOR.muted
-        : isMissing
-          ? COLOR.missing
-          : COLOR.pass
+    const optionalIds = new Set(['ledger', 'marketShare', 'chainKey', 'extra'])
+    const isOptional = optionalIds.has(slot.id)
+    const mark = isOptional && !isMissing ? '√' : isMissing ? '○' : '√'
+    const color = isMissing ? COLOR.missing : COLOR.pass
     doc.fontSize(11).fillColor(color).text(mark, M, y - 1, { width: 16 })
     doc.fontSize(9).fillColor(COLOR.body).text(slot.title, M + 20, y, { width: CW - 120 })
     doc
       .fontSize(8.5)
       .fillColor(COLOR.muted)
       .text(
-        slot.optional && slot.id === 'ledger' ? '按需提供' : isMissing ? '未上传' : '已上传',
+        isMissing ? (isOptional ? '未上传（选填）' : '未上传') : '已上传',
         PAGE.width - M - 70,
         y,
         { width: 70, align: 'right' }
@@ -476,7 +576,7 @@ export const renderPortalPdf = async (data: PortalResultResponse): Promise<Buffe
     size: 'A4',
     margin: M,
     bufferPages: true,
-    info: { Title: `${data.company.name} 专精特新自评报告`, Author: '专精特新申报自评打分系统' }
+    info: { Title: `${data.company.name} 小巨人自评报告`, Author: '专精特新“小巨人”申报自评打分系统' }
   })
 
   if (font.postscriptName) doc.registerFont('report', font.path, font.postscriptName)
@@ -490,6 +590,7 @@ export const renderPortalPdf = async (data: PortalResultResponse): Promise<Buffe
   })
 
   renderCover(doc, data)
+  renderGates(doc, data)
   renderDimensions(doc, data)
   renderAdvices(doc, data)
   renderMaterials(doc, data)
