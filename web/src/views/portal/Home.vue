@@ -10,6 +10,8 @@ import LicenseBanner from '@/components/portal/LicenseBanner.vue'
 import HistoryList from '@/components/portal/HistoryList.vue'
 
 const slots = ref<PortalSlot[]>([])
+const applicationTypes = ref<{ value: 'new' | 'review'; label: string; hint: string }[]>([])
+const gateHints = ref<Record<string, string>>({})
 const passLine = ref<number | null>(null)
 const loading = ref(true)
 const loadError = ref('')
@@ -21,13 +23,19 @@ const form = reactive({
   name: '',
   phone: '',
   endYear: currentYear - 1,
+  applicationType: 'new' as 'new' | 'review',
+  previousScore: undefined as number | undefined,
   inventionCount: 0,
   layoutDesignCount: 0,
   softCopyrightCount: 0,
   utilityModelCount: 0,
   designPatentCount: 0,
   selfDevelopedI: true,
-  highValueI: false
+  highValueI: false,
+  marketShareEnabled: false,
+  marketSharePercent: undefined as number | undefined,
+  chainSixBase: false,
+  chainKeySegment: false
 })
 
 const files = reactive<Record<string, File[]>>({})
@@ -56,6 +64,8 @@ const load = async () => {
   try {
     const response = await api.portalConfig()
     slots.value = response.config.slots
+    applicationTypes.value = response.config.applicationTypes ?? []
+    gateHints.value = response.config.gateHints ?? {}
     passLine.value = response.config.passLine
     for (const slot of response.config.slots) files[slot.id] = []
   } catch (err) {
@@ -135,7 +145,18 @@ const submit = async () => {
       utilityModelCount: Number(form.utilityModelCount) || 0,
       designPatentCount: Number(form.designPatentCount) || 0,
       selfDevelopedI: form.selfDevelopedI,
-      highValueI: form.highValueI
+      highValueI: form.highValueI,
+      marketShare:
+        form.marketShareEnabled && typeof form.marketSharePercent === 'number'
+          ? form.marketSharePercent / 100
+          : undefined,
+      chainSixBase: form.chainSixBase,
+      chainKeySegment: form.chainKeySegment,
+      applicationType: form.applicationType,
+      previousScore:
+        form.applicationType === 'review' && typeof form.previousScore === 'number'
+          ? form.previousScore
+          : undefined
     },
     period: period.value,
     slots: slots.value.map((slot) => ({
@@ -159,10 +180,10 @@ onMounted(load)
 <template>
   <div class="home" v-loading="loading">
     <header class="hero">
-      <h1>专精特新自评，一次讲清楚</h1>
+      <h1>小巨人自评，七项指标逐条讲清楚</h1>
       <p>
-        填企业信息、传几份材料，系统会自动识别财务数据并给出参考得分，
-        同时列出距离 {{ passLine ?? '—' }} 分参考线还差什么、怎么补。
+        填企业信息、传几份材料，系统会自动识别财务数据，按官方七项认定标准逐条判定，
+        并给出距离 {{ passLine ?? 60 }} 分参考线还差什么、怎么补。
       </p>
     </header>
 
@@ -205,6 +226,40 @@ onMounted(load)
       <div class="period">
         统计期间 {{ period.y2 }}–{{ period.y0 }}（向前取三年）
       </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>申报类型</h2>
+        <span class="tip">影响门槛口径，新申请与复核不同</span>
+      </div>
+      <el-radio-group v-model="form.applicationType" class="type-group">
+        <el-radio-button
+          v-for="item in applicationTypes"
+          :key="item.value"
+          :value="item.value"
+        >
+          {{ item.label }}
+        </el-radio-button>
+      </el-radio-group>
+      <p class="note">
+        {{ applicationTypes.find((item) => item.value === form.applicationType)?.hint ?? '' }}
+      </p>
+      <div v-if="form.applicationType === 'review'" class="grid">
+        <label class="field">
+          <span>上次评价得分（选填）</span>
+          <el-input-number
+            v-model="form.previousScore"
+            :min="0"
+            :max="100"
+            :precision="2"
+            controls-position="right"
+          />
+        </label>
+      </div>
+      <p v-if="form.applicationType === 'review'" class="note">
+        复核口径为「近两年任意一年达 {{ passLine ?? 60 }} 分即可」。填了上次得分会一并判定，不填则只看本年度。
+      </p>
     </section>
 
     <section class="card">
@@ -272,9 +327,51 @@ onMounted(load)
       </div>
 
       <p class="note">
-        按官方口径就高选一档：高价值 Ⅰ 类 10 分 / 自主研发 Ⅰ 类 8 分 / Ⅰ 类 6 分 / 仅 Ⅱ 类 2
-        分，不叠加。商标不计入，转让未满 1 年的不计入。
+        小巨人的硬门槛是 <b>4 项</b> Ⅰ类知识产权（自主申请、权利人排名前三、不含转入）。件数不足 4 项时，
+        门槛 {{ gateHints.GATE_6 ?? 'GATE_6' }}，该项得分也会降到 3 分档。商标不计入，转让未满 1 年的不计入。
       </p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>主观项（选填）</h2>
+        <span class="tip">官方口径为企业如实说明即可，不作否决</span>
+      </div>
+
+      <div class="group">市场占有率 — {{ gateHints.GATE_7 ?? 'GATE_7' }}</div>
+      <div class="grid">
+        <div class="check">
+          <el-checkbox v-model="form.marketShareEnabled">我知道主导产品的细分市场占有率</el-checkbox>
+        </div>
+        <label v-if="form.marketShareEnabled" class="field">
+          <span>占有率（%）</span>
+          <el-input-number
+            v-model="form.marketSharePercent"
+            :min="0"
+            :max="100"
+            :precision="1"
+            controls-position="right"
+          />
+        </label>
+      </div>
+      <p class="note">
+        小巨人要求主导产品细分市场占有率达到 10% 以上，或国内前三名。这一条是提示项，
+        不填不影响达标结论，但结果页会提醒你如实说明。
+      </p>
+
+      <div class="group">产业链属性 — {{ gateHints.GATE_8 ?? 'GATE_8' }}</div>
+      <div class="grid">
+        <div class="check">
+          <el-checkbox v-model="form.chainSixBase">
+            主导产品属于「六基」领域（核心基础零部件 / 元器件 / 关键软件 / 先进基础工艺 / 关键基础材料 / 产业技术基础）
+          </el-checkbox>
+        </div>
+        <div class="check">
+          <el-checkbox v-model="form.chainKeySegment">
+            主导产品属于传统产业升级、新兴产业或未来产业，位于产业链关键环节
+          </el-checkbox>
+        </div>
+      </div>
     </section>
 
     <section class="card">
@@ -416,6 +513,27 @@ onMounted(load)
   grid-column: span 2;
   font-size: 12.5px;
   color: #5b6474;
+  display: flex;
+  align-items: center;
+}
+
+.type-group {
+  display: flex;
+  gap: 10px;
+}
+
+.type-group :deep(.el-radio-button__inner) {
+  border-radius: 999px !important;
+  border: 1px solid #dbe6f5 !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  padding: 9px 20px;
+}
+
+.type-group :deep(.el-radio-button.is-active .el-radio-button__inner) {
+  background: linear-gradient(135deg, #1e50d8, #2563eb 46%, #0ea5e9) !important;
+  border-color: transparent !important;
+  color: #fff;
 }
 
 .field {

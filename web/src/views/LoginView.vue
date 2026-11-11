@@ -312,14 +312,14 @@ const submit = async () => {
         <div class="brand-head">
           <span class="mark">专</span>
           <div class="brand-text">
-            <strong>专精特新自评</strong>
+            <strong>小巨人自评</strong>
             <span>上传材料 · 自动打分 · 出具补足建议</span>
           </div>
         </div>
 
         <div class="brand-main">
           <div class="kicker-row">
-            <span class="kicker">SRDI SELF-ASSESSMENT</span>
+            <span class="kicker">LITTLE GIANT SELF-ASSESSMENT</span>
             <i class="rule" />
           </div>
 
@@ -358,8 +358,8 @@ const submit = async () => {
                       <span class="pv-val">{{ row.value.toFixed(1) }}</span>
                     </div>
                   </div>
-                  <span class="pv-chip pv-chip-a"><i />23 项指标 · 证据已抽取</span>
-                  <span class="pv-chip pv-chip-b"><i />五个维度</span>
+                  <span class="pv-chip pv-chip-a"><i />9 道门槛 · 证据已抽取</span>
+                  <span class="pv-chip pv-chip-b"><i />七项认定指标</span>
                 </div>
               </div>
             </div>
@@ -388,7 +388,7 @@ const submit = async () => {
         <span class="badge"><i />仅限授权人员</span>
 
         <p class="pane-kicker">{{ mode === 'customer' ? 'CLIENT PORTAL' : 'ADMIN CONSOLE' }}</p>
-        <h1 class="form-title">{{ mode === 'customer' ? '登录专精特新自评' : '登录管理后台' }}</h1>
+        <h1 class="form-title">{{ mode === 'customer' ? '登录小巨人自评' : '登录管理后台' }}</h1>
         <p class="form-lede">
           {{
             mode === 'customer'

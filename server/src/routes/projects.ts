@@ -26,8 +26,8 @@ const parseCreate = (body: unknown): CreateProjectRequest => {
     input.name = raw.name
   }
   if (raw.level !== undefined) {
-    if (raw.level !== 'SRDI' && raw.level !== 'LITTLE_GIANT') {
-      throw badRequest('invalid_level', '等级只能是 SRDI 或 LITTLE_GIANT')
+    if (raw.level !== 'LITTLE_GIANT') {
+      throw badRequest('invalid_level', '等级只能是 LITTLE_GIANT')
     }
     input.level = raw.level
   }

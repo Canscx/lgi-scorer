@@ -171,14 +171,7 @@ export const createProjectStore = (dataDir: string, lock: LockTable): ProjectSto
     input: CreateProjectRequest,
     benchmarksVersion?: string
   ): Promise<ProjectMeta> => {
-    const level = input.level ?? 'SRDI'
-    if (level !== 'SRDI') {
-      throw badRequest(
-        'level_not_supported',
-        '当前仅支持专精特新中小企业规则包',
-        '小巨人规则包计划在第三阶段提供'
-      )
-    }
+    const level = 'LITTLE_GIANT' as const
     const now = new Date().toISOString()
     const company = input.company ? normalizeCompany(input.company) : undefined
     const meta: ProjectMeta = {

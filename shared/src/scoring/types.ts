@@ -57,7 +57,7 @@ export interface FieldEntry {
 export interface EvidenceDoc {
   schemaVersion: string
   projectId: string
-  level: 'SRDI' | 'LITTLE_GIANT'
+  level: 'LITTLE_GIANT'
   applicationType?: 'new' | 'review'
   disabledGates?: string[]
   rulesId: string

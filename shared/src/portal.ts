@@ -9,6 +9,8 @@ export interface PortalSlot {
   accept: string[]
   docType?: string
   docTypes?: { value: string; label: string }[]
+  gateHint?: string
+  template?: string
 }
 
 export interface PortalRecognizeConfig {
@@ -28,12 +30,20 @@ export interface LicenseProfile {
   cached: boolean
 }
 
+export interface PortalApplicationType {
+  value: 'new' | 'review'
+  label: string
+  hint: string
+}
+
 export interface PortalConfig {
   version: string
   passLine: number
   lookup: { windowMinutes: number; maxAttempts: number }
   recognize: PortalRecognizeConfig
   slots: PortalSlot[]
+  applicationTypes: PortalApplicationType[]
+  gateHints: Record<string, string>
 }
 
 export const MIN_PASS_CONFIDENCE = 0.5

@@ -12,7 +12,7 @@ const projectOf = (company?: ProjectMeta['company']): ProjectMeta => ({
   schemaVersion: '1.0.0',
   projectId: 'p_testidentity001',
   name: '测试项目',
-  level: 'SRDI',
+  level: 'LITTLE_GIANT',
   rulesId: 'rules.lgi.v1.0.0',
   period: PERIOD,
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -31,7 +31,7 @@ const entry = (key: string, type: FieldEntry['type'], value: FieldEntry['value']
 const evidenceOf = (fields: Record<string, FieldEntry>): EvidenceDoc => ({
   schemaVersion: '1.0.0',
   projectId: 'p_testidentity001',
-  level: 'SRDI',
+  level: 'LITTLE_GIANT',
   rulesId: 'rules.lgi.v1.0.0',
   period: PERIOD,
   fields

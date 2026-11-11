@@ -89,12 +89,12 @@ describe('项目仓库', () => {
     })
   })
 
-  it('小巨人等级暂不支持', async () => {
+  it('等级固定为小巨人', async () => {
     await withTempDir(async (dir) => {
       const store = createStore(dir)
-      await expect(store.projects.create({ level: 'LITTLE_GIANT' })).rejects.toMatchObject({
-        code: 'level_not_supported'
-      })
+      const project = await store.projects.create({ level: 'LITTLE_GIANT' })
+      expect(project.level).toBe('LITTLE_GIANT')
+      expect(project.rulesId).toBe('rules.lgi.v1.0.0')
     })
   })
 })

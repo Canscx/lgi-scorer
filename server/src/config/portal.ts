@@ -6,9 +6,16 @@ import { loadRules } from './rules'
 
 const PORTAL_FILE = 'portal.json'
 
+const FALLBACK_APPLICATION_TYPES = [
+  { value: 'new' as const, label: '本年度新申请', hint: '按完整口径判定' },
+  { value: 'review' as const, label: '到期复核', hint: '不考查复合增长率' }
+]
+
 const FALLBACK: PortalConfig = {
   version: '0.0.0',
-  passLine: 50,
+  passLine: 60,
+  applicationTypes: FALLBACK_APPLICATION_TYPES,
+  gateHints: {},
   lookup: { windowMinutes: 10, maxAttempts: 10 },
   recognize: {
     enabled: true,
@@ -26,6 +33,8 @@ const normalizeSlot = (raw: PortalSlot): PortalSlot => ({
   hint: String(raw.hint ?? ''),
   required: raw.required === true,
   accept: Array.isArray(raw.accept) ? raw.accept.map((item) => String(item).toLowerCase()) : [],
+  ...(typeof raw.gateHint === 'string' && raw.gateHint ? { gateHint: raw.gateHint } : {}),
+  ...(typeof raw.template === 'string' && raw.template ? { template: raw.template } : {}),
   ...(typeof raw.docType === 'string' && raw.docType ? { docType: raw.docType } : {}),
   ...(Array.isArray(raw.docTypes) && raw.docTypes.length > 0
     ? {
@@ -79,7 +88,23 @@ export const loadPortalConfig = (): PortalConfig => {
             ? Math.floor(raw.recognize.ttlHours)
             : FALLBACK.recognize.ttlHours
       },
-      slots: Array.isArray(raw.slots) ? raw.slots.map(normalizeSlot) : FALLBACK.slots
+      slots: Array.isArray(raw.slots) ? raw.slots.map(normalizeSlot) : FALLBACK.slots,
+      applicationTypes:
+        Array.isArray(raw.applicationTypes) && raw.applicationTypes.length > 0
+          ? raw.applicationTypes
+              .filter((item) => item && (item.value === 'new' || item.value === 'review'))
+              .map((item) => ({
+                value: item.value,
+                label: String(item.label ?? item.value),
+                hint: String(item.hint ?? '')
+              }))
+          : FALLBACK_APPLICATION_TYPES,
+      gateHints:
+        raw.gateHints && typeof raw.gateHints === 'object'
+          ? Object.fromEntries(
+              Object.entries(raw.gateHints).map(([key, value]) => [key, String(value)])
+            )
+          : {}
     }
   } catch {
     cached = { ...FALLBACK, passLine }

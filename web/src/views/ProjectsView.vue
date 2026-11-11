@@ -132,7 +132,7 @@ onMounted(load)
       >
         <span class="title">{{ project.name }}</span>
         <span class="meta">
-          <em>{{ project.level === 'SRDI' ? '专精特新中小企业' : '小巨人' }}</em>
+          <em>专精特新“小巨人”</em>
           <span>{{ project.period.y2 }}–{{ project.period.y0 }}</span>
           <span>{{ project.files }} 份材料</span>
         </span>

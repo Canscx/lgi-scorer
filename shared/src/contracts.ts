@@ -58,7 +58,7 @@ export interface ApiError {
   path?: string
 }
 
-export type ProjectLevel = 'SRDI' | 'LITTLE_GIANT'
+export type ProjectLevel = 'LITTLE_GIANT'
 export type FileKind = 'pdf' | 'docx' | 'xlsx' | 'image'
 export type FileRoute = 'text' | 'vision' | 'hybrid'
 export type FileStatus = 'pending' | 'parsed' | 'failed'
@@ -121,6 +121,11 @@ export interface ProjectCompany {
   designPatentCount?: number
   selfDevelopedI?: boolean
   highValueI?: boolean
+  marketShare?: number
+  chainSixBase?: boolean
+  chainKeySegment?: boolean
+  applicationType?: 'new' | 'review'
+  previousScore?: number
 }
 
 export interface ProjectMeta {
