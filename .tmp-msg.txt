@@ -1,8 +1,10 @@
-feat(batch5): 新增专精特新 vs 小巨人差异对照页, 默认折叠
+docs(batch6): 部署文档与技术文档全面改为小巨人口径
 
-- shared/src/compare.ts: 新建, 三节完整对照(基础定位 4 条 / 硬性门槛 12 条 / 评价机制 6 条) + 八项关键差异
-- web/src/views/CompareView.vue: 新建, 关键差异表常显, 三张完整表默认折叠点击展开
-- router.ts + App.vue: 新增 #/compare 路由, 归入客户侧
-- Home.vue: 首页 hero 增加「专精特新 vs 小巨人，差在哪」入口
+- deploy/宝塔部署教程.md: 重写, 加入与专精特新站共存的检查清单(端口 8788 / pm2 lgi / 目录前缀)
+- deploy/README.md: 重写, 补充九道门槛说明、双账号、8788 端口、排错新增「打开的是另一个站」
+- .env.example: 端口改 8788, 补全四个账号变量与分组注释
+- docs/scoring.md: 重写前三节(九项门槛三层结构 / 硬门槛与提示项 / 三种门槛开关 / 权重来源声明 / IND_17 四项红线), 后续章节顺延
+- docs/architecture.md: cookie 名与门槛数量同步
+- scripts/build-portable.mjs + smoke-web.mjs: srdi 前缀改 lgi
 
-验证: 实机渲染确认八项关键差异表 + 三张折叠表正常; pnpm typecheck 三包通过
+验证: pnpm validate 通过, shared 162 + server 154 测试全绿

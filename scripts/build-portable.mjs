@@ -29,8 +29,8 @@ const removeDir = (dir) => {
 
 const writeGbkFile = (dest, text) => {
   const tmpDir = os.tmpdir()
-  const src = path.join(tmpDir, 'srdi-bat-src.txt')
-  const out = path.join(tmpDir, 'srdi-bat-out.txt')
+  const src = path.join(tmpDir, 'lgi-bat-src.txt')
+  const out = path.join(tmpDir, 'lgi-bat-out.txt')
   writeFileSync(src, text.replace(/\r?\n/g, '\r\n'), 'utf8')
   const script = `$t=[IO.File]::ReadAllText('${src}',[Text.Encoding]::UTF8);[IO.File]::WriteAllText('${out}',$t,[Text.Encoding]::GetEncoding(936))`
   const encoded = Buffer.from(script, 'utf16le').toString('base64')
@@ -244,7 +244,7 @@ run('npm install --omit=dev --no-package-lock --no-audit --no-fund --loglevel=er
 const installed = await readdir(path.join(APP_DIR, 'node_modules'))
 log(`已安装 ${installed.filter((n) => !n.startsWith('.')).length} 个顶层包`)
 
-await copyTree(path.join(ROOT, 'shared'), path.join(APP_DIR, 'node_modules', '@srdi', 'shared'))
+await copyTree(path.join(ROOT, 'shared'), path.join(APP_DIR, 'node_modules', '@lgi', 'shared'))
 log('@lgi/shared 已实体化注入')
 
 step('4/7 补齐资源与运行时')

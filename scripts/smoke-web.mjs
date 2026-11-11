@@ -22,7 +22,7 @@ if (!CHROME) {
   process.exit(1)
 }
 
-const profile = await mkdtemp(path.join(tmpdir(), 'srdi-smoke-'))
+const profile = await mkdtemp(path.join(tmpdir(), 'lgi-smoke-'))
 const chrome = spawn(
   CHROME,
   [

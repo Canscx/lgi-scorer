@@ -31,7 +31,7 @@ L5 报告  ScoreResult → 报告      模板渲染;AI 只润色,不产数字
 
 ```
 config/
-  rules/         规则包(六门槛 + 23 指标)
+  rules/         规则包(九门槛 + 23 指标)
   benchmarks/    行业基准库
   catalog/       字段目录(47 字段)
   prompts/       分层 prompt 模板
@@ -107,7 +107,7 @@ PUT    /api/settings/ai                   { baseUrl?, apiKey?, model?, clearKey?
 POST   /api/settings/ai/test              → { ok, model, latencyMs, message }
 GET    /api/health                        → 运行时、规则摘要与数据目录
 
-# 客户轻流程(仅 customer 角色,浏览器身份靠 srdi_client cookie)
+# 客户轻流程(仅 customer 角色,浏览器身份靠 lgi_client cookie)
 GET    /api/portal/config                        → { config, defaultPeriod }
 POST   /api/portal/projects                      { company, period? } → { projectId, name }
 GET    /api/portal/projects                      → { projects[] }(按 claims 过滤)
@@ -128,7 +128,7 @@ PATCH  /api/admin/projects/:id/industry          { industryCode } → 重算
 
 **角色分区**:除 `/api/auth/*` 与 `/api/health` 外,`/api/portal/*` 走 `requireRole('customer')`,其余走 `requireRole('admin')`。客户访问后台接口得 403,后台访问客户接口同样 403,两套入口在路由层就分开,不靠前端隐藏。
 
-客户身份不是账号而是浏览器:首次进 `/api/portal/*` 时下发 `srdi_client`(HttpOnly,两年),项目的 `claims[]` 记录所有可访问该项目的浏览器身份。输对企业全称 + 手机号后四位后会把当前浏览器追加进 `claims`,`/api/portal/lookup` 有 10 次/10 分钟的 IP 限流(参数在 `config/portal.json`)。
+客户身份不是账号而是浏览器:首次进 `/api/portal/*` 时下发 `lgi_client`(HttpOnly,两年),项目的 `claims[]` 记录所有可访问该项目的浏览器身份。输对企业全称 + 手机号后四位后会把当前浏览器追加进 `claims`,`/api/portal/lookup` 有 10 次/10 分钟的 IP 限流(参数在 `config/portal.json`)。
 
 接口契约以 `shared/src/contracts.ts` 的 TS 类型为准,前后端共享同一份定义。模型配置落 `data/ai-settings.json`,读取时页面配置 > 环境变量 > 默认值,Key 只回显掩码。
 
@@ -168,7 +168,7 @@ confirmed ──重新解析──> candidate(旧值保留,不丢历史)
 客户版   4 页 A4:封面(分数+双系列雷达) / 五维+23 项自查 / 补足建议 / 材料与说明
          管理员在评分页点「导出报告」下载的就是这一份,与页面同源
 内部版   Markdown / PDF,8 章完整报告,数字全部来自 score-result.json
-主视图   条件匹配度:六项门槛逐条 满足/不满足/材料不足/需人工确认
+主视图   条件匹配度:九项门槛逐条 满足/不满足/材料不足/需人工确认(7 硬 + 2 提示项)
          材料完整度:47 字段中已确认多少,缺哪些佐证
 次视图   参考得分:63.4(区间 51.2 – 71.8),标注非官方口径
 ```
