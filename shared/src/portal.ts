@@ -136,6 +136,49 @@ export interface PortalMaterial {
   pages?: number
 }
 
+export interface PortalGateCheck {
+  id: string
+  label: string
+  verdict: 'pass' | 'fail' | 'unknown' | 'pending'
+  exemption: boolean
+  missingFields: string[]
+}
+
+export interface PortalGate {
+  id: string
+  name: string
+  severity: 'hard' | 'advisory'
+  verdict: 'pass' | 'fail' | 'unknown' | 'pending'
+  effective: 'pass' | 'fail' | 'pending'
+  basis: string
+  passedVia?: string
+  skipped: boolean
+  skipReason?: string
+  policyRef?: string
+  explain: string
+  checks: PortalGateCheck[]
+}
+
+export interface PortalSubjectiveItem {
+  id: string
+  name: string
+  reason: string
+  policyRef?: string
+}
+
+export interface PortalGateSummary {
+  total: number
+  hardTotal: number
+  hardPassed: number
+  hardFailed: number
+  hardPending: number
+  advisoryTotal: number
+  advisoryOpen: number
+  applicationType: 'new' | 'review'
+  gates: PortalGate[]
+  subjective: PortalSubjectiveItem[]
+}
+
 export interface PortalResultResponse {
   projectId: string
   company: ProjectCompany
@@ -147,6 +190,7 @@ export interface PortalResultResponse {
   advices: PortalAdvice[]
   materials: PortalMaterial[]
   missingSlots: { id: string; title: string; required: boolean }[]
+  gateSummary: PortalGateSummary | null
   warnings: string[]
   generatedAt: string
   scoredAt: string

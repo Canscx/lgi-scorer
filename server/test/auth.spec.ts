@@ -56,7 +56,7 @@ describe('登录鉴权', () => {
         const response = await login(server.base, CREDENTIALS.user, CREDENTIALS.password)
         expect(response.status).toBe(200)
         const cookie = cookieOf(response)
-        expect(cookie.startsWith('srdi_session=')).toBe(true)
+        expect(cookie.startsWith('lgi_session=')).toBe(true)
 
         const projects = await fetch(`${server.base}/api/projects`, {
           headers: { cookie }

@@ -71,7 +71,7 @@ export const loadRulesSummary = (): RulesSummary | null => {
     return {
       id: raw.rulesId ?? 'unknown',
       version: raw.schemaVersion ?? '0.0.0',
-      level: raw.level ?? 'SRDI',
+      level: raw.level ?? 'LITTLE_GIANT',
       effectiveFrom: raw.effectiveFrom ?? '',
       gates: raw.gates?.length ?? 0,
       dimensions: dimensions.length,

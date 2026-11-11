@@ -1,4 +1,4 @@
-const KEY = 'srdi.login.v1'
+const KEY = 'lgi.login.v1'
 
 export interface SavedLogin {
   username: string

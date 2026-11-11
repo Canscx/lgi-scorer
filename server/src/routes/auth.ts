@@ -5,7 +5,7 @@ import { parseCookies } from '../auth/session'
 import { authed } from '../auth/types'
 import { badRequest } from '../errors'
 
-export const SESSION_COOKIE = 'srdi_session'
+export const SESSION_COOKIE = 'lgi_session'
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))

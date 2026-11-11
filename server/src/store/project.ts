@@ -117,7 +117,26 @@ const normalizeCompany = (input: ProjectCompany): ProjectCompany => {
     utilityModelCount: countOf(input.utilityModelCount, '实用新型专利数量'),
     designPatentCount: countOf(input.designPatentCount, '外观设计专利数量'),
     ...(typeof input.selfDevelopedI === 'boolean' ? { selfDevelopedI: input.selfDevelopedI } : {}),
-    ...(typeof input.highValueI === 'boolean' ? { highValueI: input.highValueI } : {})
+    ...(typeof input.highValueI === 'boolean' ? { highValueI: input.highValueI } : {}),
+    ...(typeof input.marketShare === 'number' &&
+    Number.isFinite(input.marketShare) &&
+    input.marketShare >= 0 &&
+    input.marketShare <= 1
+      ? { marketShare: input.marketShare }
+      : {}),
+    ...(typeof input.chainSixBase === 'boolean' ? { chainSixBase: input.chainSixBase } : {}),
+    ...(typeof input.chainKeySegment === 'boolean'
+      ? { chainKeySegment: input.chainKeySegment }
+      : {}),
+    ...(input.applicationType === 'new' || input.applicationType === 'review'
+      ? { applicationType: input.applicationType }
+      : {}),
+    ...(typeof input.previousScore === 'number' &&
+    Number.isFinite(input.previousScore) &&
+    input.previousScore >= 0 &&
+    input.previousScore <= 100
+      ? { previousScore: input.previousScore }
+      : {})
   }
 }
 

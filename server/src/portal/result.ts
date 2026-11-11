@@ -8,10 +8,15 @@ import type {
   PortalCheck,
   PortalDimension,
   PortalMark,
+  PortalGate,
+  PortalGateCheck,
+  PortalGateSummary,
   PortalResultResponse,
+  PortalSubjectiveItem,
   ProjectMeta,
   RulesDoc,
   ScoreRecord,
+  ScoreResult,
   ScoringSpec
 } from '@lgi/shared'
 import { catalogFields } from '../config/catalog'
@@ -74,6 +79,67 @@ const materialRateOf = (evidence: EvidenceDoc) => {
     if (entry.status === 'confirmed') confirmed += 1
   }
   return total === 0 ? 0 : confirmed / total
+}
+
+const ADVISORY_REASON: Record<string, string> = {
+  GATE_7:
+    '官方口径为企业如实说明即可，2026 年申报通知免交占有率证明。本工具按提示项处理，不作否决。',
+  GATE_8:
+    '归属判断依赖产品与产业链的对应关系，官方口径为企业如实说明。本工具按提示项处理，不作否决。'
+}
+
+const toPortalGate = (
+  gate: ScoreResult['gates'][number],
+  fieldLabels: Map<string, string>
+): PortalGate => ({
+  id: gate.id,
+  name: gate.name,
+  severity: gate.severity ?? 'hard',
+  verdict: gate.verdict,
+  effective: gate.effective,
+  basis: gate.basis,
+  ...(gate.passedVia ? { passedVia: gate.passedVia } : {}),
+  skipped: gate.skipped === true,
+  ...(gate.skipReason ? { skipReason: gate.skipReason } : {}),
+  ...(gate.policyRef ? { policyRef: gate.policyRef } : {}),
+  explain: gate.explain,
+  checks: gate.checks.map<PortalGateCheck>((check) => ({
+    id: check.id,
+    label: check.label,
+    verdict: check.verdict,
+    exemption: check.exemption,
+    missingFields: check.missing.map((key) => fieldLabels.get(key) ?? key)
+  }))
+})
+
+const buildGateSummary = (
+  result: ScoreResult,
+  applicationType: 'new' | 'review',
+  fieldLabels: Map<string, string>
+): PortalGateSummary => {
+  const gates = result.gates.map((gate) => toPortalGate(gate, fieldLabels))
+  const hard = gates.filter((gate) => gate.severity === 'hard')
+  const advisory = gates.filter((gate) => gate.severity === 'advisory')
+
+  const subjective: PortalSubjectiveItem[] = advisory.map((gate) => ({
+    id: gate.id,
+    name: gate.name,
+    reason: ADVISORY_REASON[gate.id] ?? '本工具按提示项处理，不参与达标判定。',
+    ...(gate.policyRef ? { policyRef: gate.policyRef } : {})
+  }))
+
+  return {
+    total: gates.length,
+    hardTotal: hard.length,
+    hardPassed: hard.filter((gate) => gate.effective === 'pass').length,
+    hardFailed: hard.filter((gate) => gate.effective === 'fail').length,
+    hardPending: hard.filter((gate) => gate.effective === 'pending').length,
+    advisoryTotal: advisory.length,
+    advisoryOpen: advisory.filter((gate) => gate.effective !== 'pass').length,
+    applicationType,
+    gates,
+    subjective
+  }
 }
 
 export interface PortalResultInput {
@@ -178,7 +244,14 @@ export const buildPortalResult = (input: PortalResultInput): PortalResultRespons
       ? { designPatentCount: base.designPatentCount }
       : {}),
     ...(typeof base?.selfDevelopedI === 'boolean' ? { selfDevelopedI: base.selfDevelopedI } : {}),
-    ...(typeof base?.highValueI === 'boolean' ? { highValueI: base.highValueI } : {})
+    ...(typeof base?.highValueI === 'boolean' ? { highValueI: base.highValueI } : {}),
+    ...(typeof base?.marketShare === 'number' ? { marketShare: base.marketShare } : {}),
+    ...(typeof base?.chainSixBase === 'boolean' ? { chainSixBase: base.chainSixBase } : {}),
+    ...(typeof base?.chainKeySegment === 'boolean'
+      ? { chainKeySegment: base.chainKeySegment }
+      : {}),
+    ...(base?.applicationType ? { applicationType: base.applicationType } : {}),
+    ...(typeof base?.previousScore === 'number' ? { previousScore: base.previousScore } : {})
   }
 
   return {
@@ -217,6 +290,11 @@ export const buildPortalResult = (input: PortalResultInput): PortalResultRespons
     checks,
     advices: input.advices,
     missingSlots: missingSlotsOf(project),
+    gateSummary: buildGateSummary(
+      result,
+      evidence.applicationType ?? base?.applicationType ?? 'new',
+      fieldLabels
+    ),
     warnings: [...new Set([...input.warnings, ...identity.warnings])],
     generatedAt: new Date().toISOString(),
     scoredAt: record.savedAt,

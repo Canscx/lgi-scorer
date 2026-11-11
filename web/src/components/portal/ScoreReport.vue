@@ -5,12 +5,30 @@ import type { PortalResultResponse } from '@lgi/shared'
 import DimensionBars from '@/components/portal/DimensionBars.vue'
 import DimensionRadar from '@/components/portal/DimensionRadar.vue'
 import ChecklistTable from '@/components/portal/ChecklistTable.vue'
+import GateTable from '@/components/portal/GateTable.vue'
 
 const props = withDefaults(defineProps<{ data: PortalResultResponse; saved?: boolean }>(), {
   saved: true
 })
 
 const score = computed(() => props.data.score)
+
+const gateSummary = computed(() => props.data.gateSummary)
+
+const gateHeadline = computed(() => {
+  const summary = gateSummary.value
+  if (!summary) return ''
+  const { hardTotal, hardPassed, hardFailed, hardPending } = summary
+  if (hardFailed > 0) {
+    return '七项硬性指标中有 ' + hardFailed + ' 项不满足，按官方口径不能通过认定，与分数无关。'
+  }
+  if (hardPending > 0) {
+    return '硬性指标已过 ' + hardPassed + ' 项，还有 ' + hardPending + ' 项需要补充材料才能判定。'
+  }
+  return '七项硬性指标全部满足（' + hardPassed + ' / ' + hardTotal + '），剩下看评价得分是否过线。'
+})
+
+const isReview = computed(() => gateSummary.value?.applicationType === 'review')
 const targetRate = Math.round(TARGET_RATE * 100)
 
 const needsEvidence = computed(() => {
@@ -172,6 +190,20 @@ const intellectualText = computed(() => {
     <p v-if="stale" class="alert">
       材料已更新，但这份报告是 {{ scoredAtText }} 的快照。重新评估后才会按新材料计分。
     </p>
+
+    <section v-if="gateSummary" class="card gates-card">
+      <div class="gates-head">
+        <h2>七项认定指标</h2>
+        <span class="gates-badge" :class="isReview ? 'review' : 'new'">
+          {{ isReview ? '到期复核' : '本年度新申请' }}
+        </span>
+      </div>
+      <p class="sub">{{ gateHeadline }}</p>
+      <p v-if="isReview" class="review-note">
+        复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。
+      </p>
+      <GateTable :gates="gateSummary.gates" />
+    </section>
 
     <section class="card">
       <h2>五个维度</h2>
@@ -564,6 +596,44 @@ const intellectualText = computed(() => {
   color: #64748b;
   font-size: 12px;
   line-height: 1.7;
+}
+
+.gates-card {
+  padding-bottom: 14px;
+}
+
+.gates-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gates-badge {
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
+.gates-badge.new {
+  background: #eff5ff;
+  color: #2563eb;
+}
+
+.gates-badge.review {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.review-note {
+  margin: -8px 0 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fffdf5;
+  border: 1px solid #fdf0d5;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #b45309;
 }
 
 .dims {
