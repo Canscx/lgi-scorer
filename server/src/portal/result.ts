@@ -254,7 +254,12 @@ export const buildPortalResult = (input: PortalResultInput): PortalResultRespons
       ? { chainKeySegment: base.chainKeySegment }
       : {}),
     ...(base?.applicationType ? { applicationType: base.applicationType } : {}),
-    ...(typeof base?.previousScore === 'number' ? { previousScore: base.previousScore } : {})
+    ...(typeof base?.previousScore === 'number' ? { previousScore: base.previousScore } : {}),
+    ...(typeof base?.srdiTitle === 'boolean' ? { srdiTitle: base.srdiTitle } : {}),
+    ...(typeof base?.subMarketYears === 'number' ? { subMarketYears: base.subMarketYears } : {}),
+    ...(typeof base?.hasNationalAward === 'boolean'
+      ? { hasNationalAward: base.hasNationalAward }
+      : {})
   }
 
   return {

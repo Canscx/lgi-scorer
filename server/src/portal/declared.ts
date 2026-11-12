@@ -13,6 +13,9 @@ export interface DeclaredInput {
   chainSixBase?: boolean
   chainKeySegment?: boolean
   applicationType?: 'new' | 'review'
+  srdiTitle?: boolean
+  subMarketYears?: number
+  hasNationalAward?: boolean
 }
 
 export interface DeclaredOutcome {
@@ -111,6 +114,34 @@ export const applyDeclaredIntellectual = async (
     await store.evidence.declareValue(project, 'qual.chainKeySegment', {
       value: chainKeySegment,
       note: '客户自述：主导产品' + which + '产业链关键环节'
+    })
+    applied = true
+  }
+
+  if (typeof input.srdiTitle === 'boolean' && !isConfirmed(doc, 'company.srdiTitle')) {
+    await store.evidence.declareValue(project, 'company.srdiTitle', {
+      value: input.srdiTitle,
+      note: input.srdiTitle
+        ? '客户自述：已取得专精特新中小企业称号'
+        : '客户自述：尚未取得专精特新中小企业称号'
+    })
+    applied = true
+  }
+
+  if (typeof input.subMarketYears === 'number' && !isConfirmed(doc, 'company.subMarketYears')) {
+    await store.evidence.declareValue(project, 'company.subMarketYears', {
+      value: Math.floor(input.subMarketYears),
+      note: '客户自述：从事细分市场 ' + Math.floor(input.subMarketYears) + ' 年'
+    })
+    applied = true
+  }
+
+  if (typeof input.hasNationalAward === 'boolean' && !isConfirmed(doc, 'qual.nationalScienceAward')) {
+    await store.evidence.declareValue(project, 'qual.nationalScienceAward', {
+      value: input.hasNationalAward,
+      note: input.hasNationalAward
+        ? '客户自述：近三年获国家级科技奖励且排名前三'
+        : '客户自述：近三年无国家级科技奖励'
     })
     applied = true
   }

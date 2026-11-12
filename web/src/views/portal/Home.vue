@@ -24,6 +24,9 @@ const form = reactive({
   phone: '',
   endYear: currentYear - 1,
   applicationType: 'new' as 'new' | 'review',
+  srdiTitle: false,
+  subMarketYears: undefined as number | undefined,
+  hasNationalAward: false,
   previousScore: undefined as number | undefined,
   inventionCount: 0,
   layoutDesignCount: 0,
@@ -153,6 +156,10 @@ const submit = async () => {
       chainSixBase: form.chainSixBase,
       chainKeySegment: form.chainKeySegment,
       applicationType: form.applicationType,
+      srdiTitle: form.srdiTitle,
+      subMarketYears:
+        typeof form.subMarketYears === 'number' ? form.subMarketYears : undefined,
+      hasNationalAward: form.hasNationalAward,
       previousScore:
         form.applicationType === 'review' && typeof form.previousScore === 'number'
           ? form.previousScore
@@ -262,6 +269,37 @@ onMounted(load)
       </div>
       <p v-if="form.applicationType === 'review'" class="note">
         复核口径为「近两年任意一年达 {{ passLine ?? 60 }} 分即可」。填了上次得分会一并判定，不填则只看本年度。
+      </p>
+
+      <div class="group" style="margin-top: 20px">
+        前置资质 — {{ gateHints.GATE_1 ?? 'GATE_1' }}
+      </div>
+      <div class="grid">
+        <div class="check">
+          <el-checkbox v-model="form.srdiTitle">
+            已取得专精特新中小企业称号（小巨人的硬性前置资质）
+          </el-checkbox>
+        </div>
+        <label class="field">
+          <span>从事细分市场年限（年）</span>
+          <el-input-number
+            v-model="form.subMarketYears"
+            :min="0"
+            :max="100"
+            controls-position="right"
+          />
+        </label>
+      </div>
+      <div class="grid" style="margin-top: 4px">
+        <div class="check">
+          <el-checkbox v-model="form.hasNationalAward">
+            近三年获国家级科技奖励且排名前三（可豁免Ⅰ类知识产权门槛）
+          </el-checkbox>
+        </div>
+      </div>
+      <p class="note">
+        没有专精特新中小企业称号，小巨人的第一道门槛就不满足，与分数无关。没有国家级奖励的话，
+        Ⅰ类知识产权仍需 4 项才能真正过门槛。
       </p>
     </section>
 

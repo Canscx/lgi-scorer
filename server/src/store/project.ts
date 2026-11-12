@@ -131,6 +131,16 @@ const normalizeCompany = (input: ProjectCompany): ProjectCompany => {
     ...(input.applicationType === 'new' || input.applicationType === 'review'
       ? { applicationType: input.applicationType }
       : {}),
+    ...(typeof input.srdiTitle === 'boolean' ? { srdiTitle: input.srdiTitle } : {}),
+    ...(typeof input.subMarketYears === 'number' &&
+    Number.isFinite(input.subMarketYears) &&
+    input.subMarketYears >= 0 &&
+    input.subMarketYears <= 100
+      ? { subMarketYears: Math.floor(input.subMarketYears) }
+      : {}),
+    ...(typeof input.hasNationalAward === 'boolean'
+      ? { hasNationalAward: input.hasNationalAward }
+      : {}),
     ...(typeof input.previousScore === 'number' &&
     Number.isFinite(input.previousScore) &&
     input.previousScore >= 0 &&

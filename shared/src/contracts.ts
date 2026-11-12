@@ -126,6 +126,9 @@ export interface ProjectCompany {
   chainKeySegment?: boolean
   applicationType?: 'new' | 'review'
   previousScore?: number
+  srdiTitle?: boolean
+  subMarketYears?: number
+  hasNationalAward?: boolean
 }
 
 export interface ProjectMeta {

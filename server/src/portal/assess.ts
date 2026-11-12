@@ -186,7 +186,10 @@ export const assessProject = async (
       marketShare: project.company?.marketShare,
       chainSixBase: project.company?.chainSixBase,
       chainKeySegment: project.company?.chainKeySegment,
-      applicationType: project.company?.applicationType
+      applicationType: project.company?.applicationType,
+      srdiTitle: project.company?.srdiTitle,
+      subMarketYears: project.company?.subMarketYears,
+      hasNationalAward: project.company?.hasNationalAward
     })
     if (!declared.applied) return `未使用自述数据（${declared.reason ?? 'skip'}）`
     return `Ⅰ类 ${declared.classI} 件 / Ⅱ类 ${declared.classII} 件`

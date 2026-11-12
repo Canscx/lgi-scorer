@@ -1,0 +1,22 @@
+feat: 前置资质与细分市场年限改为客户直接回答
+
+修复一个真实的可用性缺口: GATE_1 原判据依赖 company.srdiTitle 与 company.subMarketYears,
+但客户前端没有任何入口, 导致这一项永远判「材料不足」.
+
+- shared/src/contracts.ts: ProjectCompany 加 srdiTitle / subMarketYears / hasNationalAward
+- server/src/store/project.ts: normalizeCompany 接受并校验这三个字段
+- server/src/portal/declared.ts: 写入 company.srdiTitle / company.subMarketYears / qual.nationalScienceAward
+- server/src/portal/assess.ts: 透传三个字段
+- server/src/portal/result.ts: 回填到结果响应
+- web/src/views/portal/Home.vue: 申报类型卡片下新增「前置资质」区块(称号勾选 + 年限输入 + 国家级奖励勾选)
+
+验证(直接调引擎, 四个场景):
+- 已获称号 6 年 + 国家级奖励 -> GATE_1 pass, GATE_6 走 G6b 豁免 pass
+- 未获称号 2 年 + 无奖励     -> GATE_1 fail
+- 已获称号 2 年(年限不足)   -> GATE_1 fail (G1a 满足 G1b 不满足)
+- 已获称号 6 年 + 无奖励     -> GATE_1 pass, GATE_6 pending(4 项红线未达)
+
+端到端(11 份真实材料, 44 页): status=ready, AI 抽取 81 条候选, 确认 13 项,
+门槛 6 fail / 1 pending, PDF 5 页生成正常.
+
+验证: pnpm validate 通过
