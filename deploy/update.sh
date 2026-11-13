@@ -47,6 +47,44 @@ done
 say() { echo "==> $*"; }
 warn() { echo "!!  $*"; }
 
+rollback_hint() {
+  echo ""
+  echo "本次更新前的快照:${CODE_BACKUP}"
+  if [ -n "${DATA_BACKUP}" ]; then echo "本次数据快照:    ${DATA_BACKUP}"; fi
+  echo "回滚代码:  bash deploy/rollback.sh"
+  echo "恢复数据:  bash deploy/rollback.sh --data ${DATA_BACKUP:-<数据包路径>}"
+  if [ "${SHA_BEFORE}" != "nogit" ]; then
+    echo "退回提交:  git reset --hard ${SHA_BEFORE} && pnpm install && pnpm build，再重启进程"
+  fi
+}
+
+auto_rollback() {
+  echo ""
+  if [ "${SHA_BEFORE}" != "nogit" ] && [ -d .git ]; then
+    say "自动回滚代码到 ${SHA_BEFORE}"
+    if git reset --hard "${SHA_BEFORE}" > /dev/null 2>&1; then
+      say "    已回到 ${SHA_BEFORE}，重新安装依赖并构建"
+      pnpm install && pnpm build || {
+        warn "回滚后重新构建仍失败，需要人工介入"
+        return 1
+      }
+      if restart_app; then
+        wait_health && say "回滚完成，服务已恢复" || warn "回滚后健康检查仍未通过，看日志: pm2 logs ${APP_NAME} --lines 100"
+      else
+        warn "回滚完成，但命令行没有 pm2 进程 ${APP_NAME}，请到宝塔面板点【重启】"
+      fi
+      return 0
+    fi
+    warn "git reset --hard 失败，改用 tar 快照回滚"
+  fi
+  say "用 tar 快照回滚: ${CODE_BACKUP}"
+  SKIP_HEALTH=1 bash "${ROOT}/deploy/rollback.sh" "${CODE_BACKUP}" || {
+    warn "tar 快照回滚也失败了"
+    return 1
+  }
+  return 0
+}
+
 PORT_VALUE="${PORT:-}"
 if [ -z "${PORT_VALUE}" ] && [ -f .env ]; then
   PORT_VALUE="$(grep -E '^PORT=' .env | tail -1 | cut -d= -f2 | tr -d '[:space:]')"
@@ -116,7 +154,7 @@ echo ""
 DATA_BACKUP=""
 if [ "${WITH_DATA}" = "1" ]; then
   say "备份数据目录 data/"
-  DATA_BACKUP="$(bash "${ROOT}/deploy/backup.sh" --data)"
+  DATA_BACKUP="$(bash "${ROOT}/deploy/backup.sh" --data)" || true
   say "    快照 ${DATA_BACKUP}"
   echo ""
 fi
@@ -140,13 +178,18 @@ if [ "${DO_INSTALL}" = "1" ]; then
   echo ""
 fi
 
+HEAD_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
+
 say "构建前端"
 if ! pnpm build; then
   warn "构建失败，磁盘上已是新代码但 web/dist 不完整"
   if [ "${DO_ROLLBACK}" = "1" ]; then
-    say "自动回滚到 ${CODE_BACKUP}"
-    SKIP_HEALTH=1 bash "${ROOT}/deploy/rollback.sh" "${CODE_BACKUP}" || true
-    warn "已尝试回滚，端口 ${PORT_VALUE} 状态请用 curl 复核"
+    if auto_rollback; then
+      rollback_hint
+      exit 1
+    fi
+    warn "自动回滚失败，代码可能停在 ${HEAD_SHA:-新提交} 上，请人工处理"
+    rollback_hint
     exit 1
   fi
   warn "手动回滚: bash deploy/rollback.sh ${CODE_BACKUP}"
@@ -157,16 +200,6 @@ echo ""
 say "字体自检"
 pnpm check:font || warn "字体自检未通过：PDF 导出可能失败，按上面列出的候选位置补字体后重启"
 
-HEAD_SHA="$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
-
-rollback_hint() {
-  echo ""
-  echo "本次更新前的快照:${CODE_BACKUP}"
-  if [ -n "${DATA_BACKUP}" ]; then echo "本次数据快照:    ${DATA_BACKUP}"; fi
-  echo "回滚代码:  bash deploy/rollback.sh"
-  echo "恢复数据:  bash deploy/rollback.sh --data ${DATA_BACKUP:-<数据包路径>}"
-  echo "退回提交:  git reset --hard ${SHA_BEFORE} && pnpm install && pnpm build，再重启进程"
-}
 
 echo ""
 say "重启服务"
@@ -175,7 +208,7 @@ if ! restart_app; then
   warn "请到宝塔「网站 → Node 项目」点【重启】，再访问页面确认版本"
   if health_ok; then
     RUNNING="$(running_commit)"
-    if [ -n "${RUNNING}" ] && [ "${RUNNING}" != "${HEAD_SHA}" ]; then
+    if [ "${HEAD_SHA}" != "nogit" ] && [ -n "${RUNNING}" ] && [ "${RUNNING}" != "${HEAD_SHA}" ]; then
       warn "进程仍在跑 ${RUNNING}，磁盘上已是 ${HEAD_SHA}"
       warn "重启之前，本次新增的接口会返回「接口不存在」"
     fi
@@ -187,12 +220,12 @@ fi
 say "健康检查 http://127.0.0.1:${PORT_VALUE}/api/health"
 if wait_health; then
   RUNNING="$(running_commit)"
-  if [ -n "${RUNNING}" ] && [ "${RUNNING}" != "${HEAD_SHA}" ]; then
+  if [ "${HEAD_SHA}" != "nogit" ] && [ -n "${RUNNING}" ] && [ "${RUNNING}" != "${HEAD_SHA}" ]; then
     warn "进程跑的还是 ${RUNNING}，磁盘上已是 ${HEAD_SHA}"
     warn "重启没生效，或重启的不是这个项目。新接口会返回「接口不存在」"
     if [ "${DO_ROLLBACK}" = "1" ]; then
-      say "自动回滚到 ${CODE_BACKUP}"
-      SKIP_HEALTH=1 bash "${ROOT}/deploy/rollback.sh" "${CODE_BACKUP}" || true
+      auto_rollback || warn "自动回滚失败，请人工处理"
+      rollback_hint
       exit 1
     fi
     rollback_hint
@@ -209,9 +242,8 @@ fi
 
 warn "健康检查未通过，进程可能没起来。看日志: pm2 logs ${APP_NAME} --lines 100"
 if [ "${DO_ROLLBACK}" = "1" ]; then
-  say "自动回滚到 ${CODE_BACKUP}"
-  SKIP_HEALTH=1 bash "${ROOT}/deploy/rollback.sh" "${CODE_BACKUP}" || true
-  warn "已尝试回滚，端口 ${PORT_VALUE} 状态请用 curl 复核"
+  auto_rollback || warn "自动回滚失败，请人工处理"
+  rollback_hint
   exit 1
 fi
 rollback_hint

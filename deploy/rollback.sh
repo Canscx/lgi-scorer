@@ -113,8 +113,12 @@ restore_code() {
   tar -tzf "${TARGET}" > /dev/null
 
   if ! command -v rsync > /dev/null 2>&1; then
-    echo "需要 rsync 才能安全覆盖代码，请先安装: yum install -y rsync 或 apt install -y rsync"
-    exit 1
+    echo "没有 rsync，改用 tar 直接覆盖（会保留 node_modules / data / .env / fonts）"
+    if ! command -v cp > /dev/null 2>&1; then
+      echo "也没有 cp，无法恢复。请先安装 rsync: yum install -y rsync 或 apt install -y rsync"
+      exit 1
+    fi
+    USE_TAR_ONLY=1
   fi
 
   echo "==> 回滚前先把当前代码也备份一份"
@@ -141,18 +145,35 @@ restore_code() {
   fi
 
   echo "==> 覆盖代码，保留 node_modules / data / release / .env / fonts / .workbuddy"
-  rsync -a --delete \
-    --exclude node_modules \
-    --exclude data \
-    --exclude release \
-    --exclude .git \
-    --exclude .env \
-    --exclude fonts \
-    --exclude .workbuddy \
-    --exclude .tmp \
-    --exclude '*.log' \
-    --exclude '*.part' \
-    "${src}/" "${ROOT}/"
+  if [ "${USE_TAR_ONLY:-0}" = "1" ]; then
+    local keep
+    keep="$(mktemp -d)"
+    for item in node_modules data release .env fonts .workbuddy .tmp; do
+      if [ -e "${ROOT}/${item}" ]; then cp -a "${ROOT}/${item}" "${keep}/" 2>/dev/null || true; fi
+    done
+    find "${ROOT}" -mindepth 1 -maxdepth 1 \
+      ! -name '.git' ! -name 'node_modules' ! -name 'data' ! -name 'release' \
+      ! -name '.env' ! -name 'fonts' ! -name '.workbuddy' ! -name '.tmp' \
+      -exec rm -rf {} +
+    cp -a "${src}/." "${ROOT}/"
+    for item in node_modules data release .env fonts .workbuddy .tmp; do
+      if [ -e "${keep}/${item}" ]; then rm -rf "${ROOT}/${item}"; cp -a "${keep}/${item}" "${ROOT}/"; fi
+    done
+    rm -rf "${keep}"
+  else
+    rsync -a --delete \
+      --exclude node_modules \
+      --exclude data \
+      --exclude release \
+      --exclude .git \
+      --exclude .env \
+      --exclude fonts \
+      --exclude .workbuddy \
+      --exclude .tmp \
+      --exclude '*.log' \
+      --exclude '*.part' \
+      "${src}/" "${ROOT}/"
+  fi
 
   cd "${ROOT}"
 
