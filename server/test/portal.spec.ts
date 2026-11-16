@@ -231,7 +231,8 @@ describe('客户轻流程', () => {
           const pdf = Buffer.from(await report.arrayBuffer())
           expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
 
-          const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs')
+          const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+          const { getDocument } = pdfjs
           const parsed = await getDocument({ data: new Uint8Array(pdf) }).promise
           expect(parsed.numPages).toBeGreaterThanOrEqual(4)
           expect(parsed.numPages).toBeLessThanOrEqual(6)
@@ -273,8 +274,15 @@ describe('客户轻流程', () => {
           )
 
           const checklist = pageTexts[adviceIndex - 1]
-          expect(checklist).toContain('√')
+          expect(checklist).toContain('符合要求')
+          expect(checklist).toContain('材料缺失')
+          expect(checklist).toContain('需要补足')
           expect(checklist).toContain('补齐达标后')
+          expect(pageTexts.join('')).not.toContain('\u221a')
+
+          const markPage = await parsed.getPage(adviceIndex)
+          const opList = await markPage.getOperatorList()
+          expect(opList.fnArray).toContain(pdfjs.OPS.constructPath)
         } finally {
           await server.close()
         }

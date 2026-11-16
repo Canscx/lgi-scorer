@@ -3,6 +3,8 @@ import type { Response } from 'express'
 import { TARGET_RATE, yearsSinceDate } from '@lgi/shared'
 import type { PortalCheck, PortalResultResponse } from '@lgi/shared'
 import { resolveReportFont } from './fonts'
+import { drawMark, markSizeFor } from './marks'
+import type { MarkKind } from './marks'
 import { drawLegend, drawRadar } from './radar'
 
 const PAGE = { width: 595.28, height: 841.89 }
@@ -22,8 +24,22 @@ const COLOR = {
   soft: '#f1f5f9'
 }
 
-const MARK_OF = { pass: '√', gap: '×', missing: '○' } as const
 const MARK_COLOR = { pass: COLOR.pass, gap: COLOR.gap, missing: COLOR.missing } as const
+
+const drawCheckMark = (
+  doc: PDFKit.PDFDocument,
+  mark: MarkKind,
+  x: number,
+  y: number,
+  fontSize: number
+) => {
+  drawMark(doc, mark, {
+    x,
+    y: y + fontSize * 0.12,
+    size: markSizeFor(fontSize),
+    color: MARK_COLOR[mark]
+  })
+}
 
 const num = (value: number) => (Number.isInteger(value) ? `${value}` : value.toFixed(2))
 
@@ -261,11 +277,29 @@ const renderCover = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
 const GATE_ORDER = ['GATE_1', 'GATE_2', 'GATE_3', 'GATE_4', 'GATE_5', 'GATE_6', 'GATE_9']
 const ADVISORY_ORDER = ['GATE_7', 'GATE_8']
 
-const GATE_MARK: Record<string, { text: string; color: string }> = {
-  pass: { text: '√', color: COLOR.pass },
-  fail: { text: '×', color: COLOR.missing },
-  pending: { text: '!', color: COLOR.gap },
-  unknown: { text: '?', color: COLOR.muted }
+const GATE_MARK: Record<string, { kind: MarkKind | null; text: string; color: string }> = {
+  pass: { kind: 'pass', text: '', color: COLOR.pass },
+  fail: { kind: 'gap', text: '', color: COLOR.missing },
+  pending: { kind: null, text: '!', color: COLOR.gap },
+  unknown: { kind: null, text: '?', color: COLOR.muted }
+}
+
+const drawGateMark = (
+  doc: PDFKit.PDFDocument,
+  mark: { kind: MarkKind | null; text: string; color: string },
+  y: number,
+  fontSize: number
+) => {
+  if (mark.kind) {
+    drawMark(doc, mark.kind, {
+      x: M + 1,
+      y: y + fontSize * 0.1,
+      size: markSizeFor(fontSize),
+      color: mark.color
+    })
+    return
+  }
+  doc.fontSize(fontSize).fillColor(mark.color).text(mark.text, M, y, { width: 14 })
 }
 
 const GATE_LABEL: Record<string, string> = {
@@ -300,7 +334,7 @@ const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse, top: n
     doc = next.doc
     y = next.y
 
-    doc.fontSize(11).fillColor(mark.color).text(mark.text, M, y - 1, { width: 14 })
+    drawGateMark(doc, mark, y, 11)
     doc.fontSize(9).fillColor(COLOR.ink).text(gate.name, M + 18, y, { width: CW - 108 })
     doc.fontSize(8.4).fillColor(COLOR.muted).text(GATE_LABEL[gate.verdict] ?? '', PAGE.width - M - 76, y, {
       width: 76,
@@ -339,7 +373,7 @@ const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse, top: n
       const next = gap(doc, y, 34)
       doc = next.doc
       y = next.y
-      doc.fontSize(11).fillColor(mark.color).text(mark.text, M, y - 1, { width: 14 })
+      drawGateMark(doc, mark, y, 11)
       doc.fontSize(8.8).fillColor(COLOR.body).text(gate.name, M + 18, y, { width: CW - 108 })
       doc.fontSize(8.4).fillColor(COLOR.muted).text(GATE_LABEL[gate.verdict] ?? '', PAGE.width - M - 76, y, {
         width: 76,
@@ -391,7 +425,17 @@ const renderDimensions = (doc: PDFKit.PDFDocument, data: PortalResultResponse) =
 
   y += 14
   y = sectionTitle(doc, y, '逐项自查')
-  doc.fontSize(8).fillColor(COLOR.muted).text('√ 符合要求　　○ 材料缺失　　× 需要补足', M, y, { width: CW })
+  const legend: { mark: 'pass' | 'missing' | 'gap'; label: string }[] = [
+    { mark: 'pass', label: '符合要求' },
+    { mark: 'missing', label: '材料缺失' },
+    { mark: 'gap', label: '需要补足' }
+  ]
+  let legendX = M
+  for (const entry of legend) {
+    drawCheckMark(doc, entry.mark, legendX, y, 8)
+    doc.fontSize(8).fillColor(COLOR.muted).text(entry.label, legendX + 11, y, { lineBreak: false })
+    legendX += 11 + doc.widthOfString(entry.label) + 24
+  }
   y += 18
 
   for (const group of dimGroups(data.checks)) {
@@ -411,9 +455,7 @@ const renderDimensions = (doc: PDFKit.PDFDocument, data: PortalResultResponse) =
       doc = next.doc
       y = next.y
 
-      doc.fontSize(11).fillColor(MARK_COLOR[item.mark]).text(MARK_OF[item.mark], M, y - 1, {
-        width: 16
-      })
+      drawCheckMark(doc, item.mark, M + 1, y, 10)
       doc.fontSize(8.6).fillColor(COLOR.body).text(text, M + 20, y, { width: CW - 96, lineGap: 1 })
       doc
         .fontSize(8.6)
@@ -495,9 +537,7 @@ const renderMaterials = (doc: PDFKit.PDFDocument, data: PortalResultResponse) =>
     const isMissing = missing.has(slot.id)
     const optionalIds = new Set(['ledger', 'marketShare', 'chainKey', 'extra'])
     const isOptional = optionalIds.has(slot.id)
-    const mark = isOptional && !isMissing ? '√' : isMissing ? '○' : '√'
-    const color = isMissing ? COLOR.missing : COLOR.pass
-    doc.fontSize(11).fillColor(color).text(mark, M, y - 1, { width: 16 })
+    drawCheckMark(doc, isMissing ? 'missing' : 'pass', M + 1, y, 10)
     doc.fontSize(9).fillColor(COLOR.body).text(slot.title, M + 20, y, { width: CW - 120 })
     doc
       .fontSize(8.5)
