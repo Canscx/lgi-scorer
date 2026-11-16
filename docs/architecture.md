@@ -116,13 +116,13 @@ DELETE /api/portal/projects/:id/files/:fileId    → 204
 POST   /api/portal/projects/:id/assess           → { jobId, reused, queueAhead }
 GET    /api/portal/jobs/:jobId                   → { job, queueAhead }(客户读不到 /api/jobs)
 GET    /api/portal/projects/:id/result           → PortalResultResponse
-GET    /api/portal/projects/:id/report           → 客户版 4 页 PDF
+GET    /api/portal/projects/:id/report           → 客户版 4 页 PDF(材料清单页含七项认定指标)
 POST   /api/portal/lookup                        { companyName, phoneTail } → { projects[] }
 
 # 管理员
 GET    /api/admin/submissions?q=                 → { passLine, items[] }
 GET    /api/admin/projects/:id/result            → AdminPortalResult(客户视图 + professional)
-GET    /api/admin/projects/:id/report            → 客户版 4 页 PDF(与页面同源)
+GET    /api/admin/projects/:id/report            → 客户版 4 页 PDF(与页面同源,材料清单页含七项认定指标)
 PATCH  /api/admin/projects/:id/industry          { industryCode } → 重算
 ```
 
@@ -165,7 +165,7 @@ confirmed ──重新解析──> candidate(旧值保留,不丢历史)
 ## 八、报告形态
 
 ```
-客户版   4 页 A4:封面(分数+双系列雷达) / 五维+23 项自查 / 补足建议 / 材料与说明
+客户版   4 页 A4:封面(分数+双系列雷达) / 五维+23 项自查 / 补足建议 / 材料清单+七项认定指标+说明
          管理员在评分页点「导出报告」下载的就是这一份,与页面同源
 内部版   Markdown / PDF,8 章完整报告,数字全部来自 score-result.json
 主视图   条件匹配度:九项门槛逐条 满足/不满足/材料不足/需人工确认(7 硬 + 2 提示项)

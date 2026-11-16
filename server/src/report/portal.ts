@@ -275,14 +275,18 @@ const GATE_LABEL: Record<string, string> = {
   unknown: '材料不足'
 }
 
-const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
+const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse, top: number) => {
   const summary = data.gateSummary
-  if (!summary) return
+  if (!summary) return top
 
-  doc.addPage()
   const label = summary.applicationType === 'review' ? '到期复核' : '本年度新申请'
-  let y = header(doc, '一、七项认定指标 · ' + label)
-  y = sectionTitle(doc, y, '硬性认定指标（官方要求同时满足）')
+  let y = sectionTitle(doc, top, '七项认定指标 · ' + label)
+  const open = gap(doc, y, 44)
+  doc = open.doc
+  y = open.y
+
+  doc.fontSize(8.6).fillColor(COLOR.ink).text('硬性认定指标（官方要求同时满足）', M, y, { width: CW })
+  y += 15
 
   const hard = [...summary.gates.filter((gate) => gate.severity === 'hard')].sort(
     (a, b) => GATE_ORDER.indexOf(a.id) - GATE_ORDER.indexOf(b.id)
@@ -349,13 +353,15 @@ const renderGates = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
 
   if (summary.applicationType === 'review') {
     y += 12
-    doc.fontSize(8.2).fillColor(COLOR.muted).text(
-      '复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。',
-      M,
-      y,
-      { width: CW, lineGap: 2 }
-    )
+    const note = '复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。'
+    const moved = gap(doc, y, 20)
+    doc = moved.doc
+    y = moved.y
+    doc.fontSize(8.2).fillColor(COLOR.muted).text(note, M, y, { width: CW, lineGap: 2 })
+    y += doc.heightOfString(note, { width: CW, lineGap: 2 }) + 2
   }
+
+  return y
 }
 
 const renderDimensions = (doc: PDFKit.PDFDocument, data: PortalResultResponse) => {
@@ -506,6 +512,9 @@ const renderMaterials = (doc: PDFKit.PDFDocument, data: PortalResultResponse) =>
   }
 
   y += 18
+  y = renderGates(doc, data, y)
+
+  y += 18
   y = sectionTitle(doc, y, '说明')
 
   const notes = [
@@ -590,7 +599,6 @@ export const renderPortalPdf = async (data: PortalResultResponse): Promise<Buffe
   })
 
   renderCover(doc, data)
-  renderGates(doc, data)
   renderDimensions(doc, data)
   renderAdvices(doc, data)
   renderMaterials(doc, data)

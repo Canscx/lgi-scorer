@@ -234,7 +234,7 @@ describe('客户轻流程', () => {
           const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs')
           const parsed = await getDocument({ data: new Uint8Array(pdf) }).promise
           expect(parsed.numPages).toBeGreaterThanOrEqual(4)
-          expect(parsed.numPages).toBeLessThanOrEqual(7)
+          expect(parsed.numPages).toBeLessThanOrEqual(6)
 
           const firstPage = await parsed.getPage(1)
           const text = (await firstPage.getTextContent()).items
@@ -248,18 +248,31 @@ describe('客户轻流程', () => {
           expect(text).toContain('成立')
           expect(text).toContain('年）')
 
-          const gatePage = await parsed.getPage(2)
-          const gates = (await gatePage.getTextContent()).items
-            .map((item) => ('str' in item ? item.str : ''))
-            .join('')
-          expect(gates).toContain('七项认定指标')
-          expect(gates).toContain('硬性认定指标')
-          expect(gates).toContain('主观项提醒')
+          const pageTexts: string[] = []
+          for (let pageNumber = 1; pageNumber <= parsed.numPages; pageNumber += 1) {
+            const page = await parsed.getPage(pageNumber)
+            pageTexts.push(
+              (await page.getTextContent()).items
+                .map((item) => ('str' in item ? item.str : ''))
+                .join('')
+            )
+          }
 
-          const dimensionPage = await parsed.getPage(3)
-          const checklist = (await dimensionPage.getTextContent()).items
-            .map((item) => ('str' in item ? item.str : ''))
-            .join('')
+          const adviceIndex = pageTexts.findIndex((text) => text.includes('补足建议'))
+          const gateIndex = pageTexts.findIndex((text) => text.includes('七项认定指标'))
+          expect(adviceIndex).toBeGreaterThanOrEqual(0)
+          expect(gateIndex).toBeGreaterThan(adviceIndex)
+          expect(pageTexts[gateIndex]).toContain('材料完整度')
+          expect(pageTexts[gateIndex]).toContain('硬性认定指标')
+          expect(pageTexts[gateIndex]).toContain('主观项提醒')
+          expect(pageTexts[gateIndex].indexOf('材料完整度')).toBeLessThan(
+            pageTexts[gateIndex].indexOf('七项认定指标')
+          )
+          expect(pageTexts[gateIndex].indexOf('七项认定指标')).toBeLessThan(
+            pageTexts[gateIndex].indexOf('本报告为申报前自评参考')
+          )
+
+          const checklist = pageTexts[adviceIndex - 1]
           expect(checklist).toContain('√')
           expect(checklist).toContain('补齐达标后')
         } finally {

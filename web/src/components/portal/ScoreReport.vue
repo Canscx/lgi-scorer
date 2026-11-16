@@ -191,20 +191,6 @@ const intellectualText = computed(() => {
       材料已更新，但这份报告是 {{ scoredAtText }} 的快照。重新评估后才会按新材料计分。
     </p>
 
-    <section v-if="gateSummary" class="card gates-card">
-      <div class="gates-head">
-        <h2>七项认定指标</h2>
-        <span class="gates-badge" :class="isReview ? 'review' : 'new'">
-          {{ isReview ? '到期复核' : '本年度新申请' }}
-        </span>
-      </div>
-      <p class="sub">{{ gateHeadline }}</p>
-      <p v-if="isReview" class="review-note">
-        复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。
-      </p>
-      <GateTable :gates="gateSummary.gates" />
-    </section>
-
     <section class="card">
       <h2>五个维度</h2>
       <p class="sub">深色为当前得分，浅色虚线为材料补齐并按每项 {{ targetRate }}% 得分率计分后的估算位置。</p>
@@ -255,6 +241,26 @@ const intellectualText = computed(() => {
         </li>
       </ul>
       <p v-if="data.advices.length === 0" class="empty">本次没有生成建议。</p>
+    </section>
+
+    <section v-if="gateSummary" class="card gates-card">
+      <details class="fold">
+        <summary>
+          <span class="fold-title">七项认定指标</span>
+          <span class="gates-badge" :class="isReview ? 'review' : 'new'">
+            {{ isReview ? '到期复核' : '本年度新申请' }}
+          </span>
+          <span class="fold-meta">
+            硬性 {{ gateSummary.hardPassed }} / {{ gateSummary.hardTotal }} 满足
+          </span>
+          <span class="fold-toggle" />
+        </summary>
+        <p class="sub">{{ gateHeadline }}</p>
+        <p v-if="isReview" class="review-note">
+          复核口径：近两年营业收入复合增长率不考查；评价得分按「近两年任意一年达标」判定。
+        </p>
+        <GateTable :gates="gateSummary.gates" />
+      </details>
     </section>
 
     <section v-if="data.warnings.length > 0" class="card">
@@ -598,14 +604,8 @@ const intellectualText = computed(() => {
   line-height: 1.7;
 }
 
-.gates-card {
-  padding-bottom: 14px;
-}
-
-.gates-head {
-  display: flex;
+.gates-card .fold > summary {
   align-items: center;
-  gap: 10px;
 }
 
 .gates-badge {
@@ -626,7 +626,7 @@ const intellectualText = computed(() => {
 }
 
 .review-note {
-  margin: -8px 0 16px;
+  margin: 0 0 16px;
   padding: 8px 12px;
   border-radius: 8px;
   background: #fffdf5;
