@@ -108,11 +108,22 @@ chmod -R 755 /www/wwwroot/lgi
 
 宝塔 → 网站 → 添加站点（纯静态即可，域名绑定好） → SSL → Let's Encrypt 申请 → 开「强制 HTTPS」。
 
-然后 网站 → 设置 → 配置文件，找到 `#PROXY-START` 到 `#PROXY-END`，整段替换为 `deploy/nginx-site.conf` 的内容。
+然后打开站点配置文件，把对应区块整段替换为 `deploy/nginx-site.conf` 的内容。
+
+**标记按界面实际看到的选，两套都用过：**
+
+| 界面 | 标记 |
+|---|---|
+| **Node 项目** → 配置文件（新版） | `# HTTP反向代理相关配置开始 >>>` … `# HTTP反向代理相关配置结束 <<<` |
+| 网站 → 设置 → 配置文件（老版） | `#PROXY-START/` … `#PROXY-END/` |
+
+两个都搜不到，就直接替换 `location /` 那一段（含 `proxy_pass http://127.0.0.1:8788;` 的那个）。
 
 ```bash
 nginx -t && nginx -s reload
 ```
+
+这份配置解决四件事：上传 413（`client_max_body_size 60m`）、解析进度条不动（SSE 关 `proxy_buffering`）、长任务被 60 秒掐断（`proxy_read_timeout 3600s`）、保留 `Upgrade` 头。
 
 宝塔内置的「反向代理」功能与「加密访问」功能都会覆盖这段配置，**改完不要再点那两个按钮**。
 

@@ -123,6 +123,22 @@ wait_health() {
   return 1
 }
 
+check_sse_conf() {
+  local conf
+  for conf in /www/server/panel/vhost/nginx/*.conf /www/server/panel/vhost/nginx/extension/*/*.conf; do
+    [ -f "${conf}" ] || continue
+    grep -q "proxy_pass http://127.0.0.1:${PORT_VALUE}" "${conf}" 2>/dev/null || continue
+    if grep -q "client_max_body_size" "${conf}" 2>/dev/null && ! grep -q "proxy_buffering off" "${conf}" 2>/dev/null; then
+      warn "反代已放开上传，但没关 SSE 缓冲：解析进度条不会动"
+      warn "按 deploy/nginx-site.conf 补 location ~ ^/api/jobs/[^/]+/stream$ 那一段"
+      warn "    涉及文件 ${conf}"
+      warn "    改完执行 nginx -t && nginx -s reload（本项不影响部署结论）"
+    fi
+    return 0
+  done
+  return 0
+}
+
 echo ""
 say "项目目录 ${ROOT}"
 say "进程名   ${APP_NAME}"
@@ -233,6 +249,7 @@ if wait_health; then
   fi
   echo ""
   say "部署完成，健康检查通过${RUNNING:+，进程提交 ${RUNNING}}"
+  check_sse_conf
   if [ "$(id -u)" = "0" ]; then
     echo "提示:本次以 root 执行，若 Node 项目以 www 运行，建议 chown -R www:www ${ROOT}"
   fi
