@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { RULES_ID } from '@lgi/shared'
 import { api, errorText } from '@/api'
 import { clearSavedLogin, loadSavedLogin, saveSavedLogin } from '@/savedLogin'
+import BrandMark from '@/components/BrandMark.vue'
 
 const emit = defineEmits<{ done: [] }>()
 
@@ -310,7 +311,7 @@ const submit = async () => {
       </div>
       <div class="brand-body">
         <div class="brand-head">
-          <span class="mark">专</span>
+          <span class="mark"><BrandMark :size="46" :radius="14" /></span>
           <div class="brand-text">
             <strong>小巨人自评</strong>
             <span>上传材料 · 自动打分 · 出具补足建议</span>
@@ -664,16 +665,9 @@ const submit = async () => {
 }
 
 .mark {
-  width: 46px;
-  height: 46px;
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb, #0ea5e9);
-  color: #fff;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 1px;
   box-shadow: 0 14px 28px -16px rgba(37, 99, 235, 0.75);
 }
 

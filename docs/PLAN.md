@@ -824,3 +824,39 @@ PDF 用 `√ ○ ×` 而非 emoji（中文字体没有 emoji 字形），四态�
 **测试**：`portal.spec.ts` 的 `toContain('√')` 改为断言图例文案 + `not.toContain('U+221A')` + `constructPath` 操作符存在，守住「不再依赖字形」。新增 `server/test/marks.spec.ts` 4 条：三态都画矢量路径、不写文字、尺寸随字号缩放、绘制后不污染调用方的线宽与端点样式。
 
 **测试方法论备忘**：pdfjs 的 `getOperatorList()` 只报告操作符，**不模拟图形状态栈**。直接收集 `setLineWidth` 会误判 `save()/restore()` 无效（实际生效）。断言状态隔离必须自己按 `q`/`Q` 模拟入栈出栈。
+
+### 2026-11-16 · 品牌标识统一（换掉「专」字 logo）
+
+**背景**：顶部 logo 是一个白底「专」字的蓝方块，三处重复定义，且和「小巨人」的产品名不同步。
+
+**新标识**：**七段柱状上升 + 基准线**（七根柱对应七项认定指标，基准线取「参考线」之意）。
+
+新建 `web/src/components/BrandMark.vue`，props 只有 `size` 与 `radius`，内部固定 `viewBox="0 0 32 32"`，柱高/间距按比例写死，随外部尺寸等比缩放。
+
+| 使用处 | 尺寸 | 圆角 |
+|---|---|---|
+| `PortalShell.vue` 客户页顶栏 | 38px | 11px |
+| `AdminShell.vue` 管理后台 | 44px | 13px |
+| `LoginView.vue` 登录页 | 46px | 14px |
+
+三处原来的 `.mark` 样式只保留 `display: grid`、`border-radius` 与投影；渐变与图形移进组件，删掉重复的 `linear-gradient` 与 `font-size`。
+
+**关键坑**：三处同时渲染时，SVG 的 `<linearGradient id>` 会撞车导致渐变互相覆盖、退化成黑色。用 Vue 3.5 内置的 `useId()` 为每个实例生成唯一 id，实测三页分别是 `v-0` / `v-1`，`fill="url(#v-N)"` 引用正确。
+
+**favicon**：新建 `web/public/favicon.svg`（该目录原本不存在），复用同一套图形与渐变，`web/index.html` 加 `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />`。Vite 自动拷进 `dist` 根目录，构建后确认 `web/dist/favicon.svg` 存在（1048 字节）。
+
+**文案统一**：
+
+| 位置 | 改为 |
+|---|---|
+| `web/index.html` `<title>` | 小巨人申报自评打分系统 |
+| `AdminShell.vue` `<h1>` | 小巨人申报自评打分系统 |
+| `PortalShell.vue` `<h1>` | 小巨人自评 |
+| `server/src/report/pdf.ts` Author | 小巨人申报自评打分系统 |
+| `server/src/report/portal.ts` Author | 小巨人申报自评打分系统 |
+
+**连带修改**：`scripts/smoke-web.mjs` 硬编码断言旧标题，已同步为新标题，否则冒烟测试必红。`deploy/README.md` 与 `deploy/宝塔部署教程.md` 里「页面标题是 X 说明你开错了站」的排查指引也一并更新——标题改名后原判断依据失效。
+
+**刻意不改**：`package.json` description、`scripts/build-portable.mjs` 便携包标题、`server/scripts/check-font.ts` 与控制台启动日志。这些是开发者侧标识，改动收益低且会牵连更多部署文档。
+
+**验证**：三处页面无头浏览器实测 —— 登录页 46px、后台 44px、客户页 38px，渐变 id 唯一且引用正确，`document.title` 已更新，favicon link 挂载成功。

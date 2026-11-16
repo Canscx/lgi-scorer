@@ -148,7 +148,7 @@ try {
   await writeFile(SHOT, Buffer.from(shot.data, 'base64'))
 
   const failures = []
-  if (report.title !== '专精特新申报自评打分系统') failures.push(`title 不符: ${report.title}`)
+  if (report.title !== '小巨人申报自评打分系统') failures.push(`title 不符: ${report.title}`)
   if (!report.heading.includes('专精特新')) failures.push('主标题缺失')
   if (report.panelCount < 5) failures.push(`卡片数量偏少: ${report.panelCount}`)
   if (report.stepCount !== 8) failures.push(`路线步骤数量异常: ${report.stepCount}`)

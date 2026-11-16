@@ -625,7 +625,7 @@ export const renderPortalPdf = async (data: PortalResultResponse): Promise<Buffe
     size: 'A4',
     margin: M,
     bufferPages: true,
-    info: { Title: `${data.company.name} 小巨人自评报告`, Author: '专精特新“小巨人”申报自评打分系统' }
+    info: { Title: `${data.company.name} 小巨人自评报告`, Author: '小巨人申报自评打分系统' }
   })
 
   if (font.postscriptName) doc.registerFont('report', font.path, font.postscriptName)

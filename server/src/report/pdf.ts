@@ -106,7 +106,7 @@ export const renderPdf = async (model: ReportModel): Promise<Buffer> => {
     bufferPages: true,
     info: {
       Title: `${model.project.name} · 专精特新中小企业自评报告`,
-      Author: '专精特新申报自评打分系统',
+      Author: '小巨人申报自评打分系统',
       Subject: '参考得分非官方口径,仅供申报前自查',
       CreationDate: new Date()
     }
