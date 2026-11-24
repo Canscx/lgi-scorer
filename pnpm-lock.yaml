@@ -61,8 +61,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.6
       '@types/node':
-        specifier: ^22.10.5
-        version: 22.20.5
+        specifier: ^26.6.6
+        version: 26.6.6
       '@types/pdfkit':
         specifier: ^0.17.7
         version: 0.17.7
@@ -77,7 +77,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: ^2.1.8
-        version: 2.1.8(@types/node@22.20.5)
+        version: 2.1.8(@types/node@26.6.6)
 
   shared:
     dependencies:
@@ -86,8 +86,8 @@ importers:
         version: 1.6.0
     devDependencies:
       '@types/node':
-        specifier: ^22.10.5
-        version: 22.20.5
+        specifier: ^26.6.6
+        version: 26.6.6
       ajv:
         specifier: ^8.20.0
         version: 8.20.0
@@ -99,7 +99,7 @@ importers:
         version: 5.7.3
       vitest:
         specifier: ^2.1.8
-        version: 2.1.8(@types/node@22.20.5)
+        version: 2.1.8(@types/node@26.6.6)
 
   web:
     dependencies:
@@ -117,17 +117,17 @@ importers:
         version: 3.5.44(typescript@5.7.3)
     devDependencies:
       '@types/node':
-        specifier: ^22.10.5
-        version: 22.20.5
+        specifier: ^26.6.6
+        version: 26.6.6
       '@vitejs/plugin-vue':
         specifier: ^5.2.1
-        version: 5.2.1(vite@6.4.5(@types/node@22.20.5)(tsx@4.23.15))(vue@3.5.44(typescript@5.7.3))
+        version: 5.2.1(vite@6.4.5(@types/node@26.6.6)(tsx@4.23.15))(vue@3.5.44(typescript@5.7.3))
       typescript:
         specifier: ^5.7.3
         version: 5.7.3
       vite:
         specifier: ^6.0.7
-        version: 6.4.5(@types/node@22.20.5)(tsx@4.23.15)
+        version: 6.4.5(@types/node@26.6.6)(tsx@4.23.15)
       vue-tsc:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.7.3)
@@ -879,6 +879,9 @@ packages:
 
   '@types/node@22.20.5':
     resolution: {integrity: sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA==}
+
+  '@types/node@26.6.6':
+    resolution: {integrity: sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==}
 
   '@types/pdfkit@0.17.7':
     resolution: {integrity: sha512-VMOZDWw7HtNtLbjIuHIhVArm9PlV0gxpz32jAl1IuXWlIgbr1lKFoTsrtvEzY8a9BIpQJEE5DwNPKD50otTs6g==}
@@ -1650,6 +1653,9 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
+
   unicode-properties@1.4.0:
     resolution: {integrity: sha512-QD9DdmYM9KsHFKdD9BdkVkefnRuGhgQi/fa8Q1681ukVGUj+wLjGthsGiKILZOB5RxDCpojU4QgAiJjrX2F7ig==}
 
@@ -2229,7 +2235,7 @@ snapshots:
 
   '@types/busboy@1.5.5':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.6
 
   '@types/connect@3.4.38':
     dependencies:
@@ -2262,9 +2268,13 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/node@26.6.6':
+    dependencies:
+      undici-types: 8.9.0
+
   '@types/pdfkit@0.17.7':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.6
 
   '@types/qs@6.15.1': {}
 
@@ -2281,9 +2291,9 @@ snapshots:
 
   '@types/web-bluetooth@0.0.21': {}
 
-  '@vitejs/plugin-vue@5.2.1(vite@6.4.5(@types/node@22.20.5)(tsx@4.23.15))(vue@3.5.44(typescript@5.7.3))':
+  '@vitejs/plugin-vue@5.2.1(vite@6.4.5(@types/node@26.6.6)(tsx@4.23.15))(vue@3.5.44(typescript@5.7.3))':
     dependencies:
-      vite: 6.4.5(@types/node@22.20.5)(tsx@4.23.15)
+      vite: 6.4.5(@types/node@26.6.6)(tsx@4.23.15)
       vue: 3.5.44(typescript@5.7.3)
 
   '@vitest/expect@2.1.8':
@@ -2293,13 +2303,13 @@ snapshots:
       chai: 5.1.2
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.8(vite@5.0.0(@types/node@22.20.5))':
+  '@vitest/mocker@2.1.8(vite@5.0.0(@types/node@26.6.6))':
     dependencies:
       '@vitest/spy': 2.1.8
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 5.0.0(@types/node@22.20.5)
+      vite: 5.0.0(@types/node@26.6.6)
 
   '@vitest/pretty-format@2.1.8':
     dependencies:
@@ -3182,6 +3192,8 @@ snapshots:
 
   undici-types@6.21.0: {}
 
+  undici-types@8.9.0: {}
+
   unicode-properties@1.4.0:
     dependencies:
       base64-js: 1.5.1
@@ -3198,13 +3210,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@2.1.8(@types/node@22.20.5):
+  vite-node@2.1.8(@types/node@26.6.6):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.5.4
       pathe: 1.1.2
-      vite: 5.0.0(@types/node@22.20.5)
+      vite: 5.0.0(@types/node@26.6.6)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -3215,16 +3227,16 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.0.0(@types/node@22.20.5):
+  vite@5.0.0(@types/node@26.6.6):
     dependencies:
       esbuild: 0.19.3
       postcss: 8.5.32
       rollup: 4.65.1
     optionalDependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.6
       fsevents: 2.3.3
 
-  vite@6.4.5(@types/node@22.20.5)(tsx@4.23.15):
+  vite@6.4.5(@types/node@26.6.6)(tsx@4.23.15):
     dependencies:
       esbuild: 0.25.0
       fdir: 6.5.0(picomatch@4.0.7)
@@ -3233,14 +3245,14 @@ snapshots:
       rollup: 4.65.1
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.6
       fsevents: 2.3.3
       tsx: 4.23.15
 
-  vitest@2.1.8(@types/node@22.20.5):
+  vitest@2.1.8(@types/node@26.6.6):
     dependencies:
       '@vitest/expect': 2.1.8
-      '@vitest/mocker': 2.1.8(vite@5.0.0(@types/node@22.20.5))
+      '@vitest/mocker': 2.1.8(vite@5.0.0(@types/node@26.6.6))
       '@vitest/pretty-format': 2.1.8
       '@vitest/runner': 2.1.8
       '@vitest/snapshot': 2.1.8
@@ -3256,11 +3268,11 @@ snapshots:
       tinyexec: 0.3.1
       tinypool: 1.0.1
       tinyrainbow: 1.2.0
-      vite: 5.0.0(@types/node@22.20.5)
-      vite-node: 2.1.8(@types/node@22.20.5)
+      vite: 5.0.0(@types/node@26.6.6)
+      vite-node: 2.1.8(@types/node@26.6.6)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.6
     transitivePeerDependencies:
       - less
       - lightningcss
