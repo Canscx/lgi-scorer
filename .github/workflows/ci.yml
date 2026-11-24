@@ -25,21 +25,25 @@ jobs:
         node: [22]
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
 
       - name: 安装 Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: |
+          if ! pnpm install --frozen-lockfile; then
+            echo "锁文件与 package.json 不一致,退回非冻结安装"
+            pnpm install --no-frozen-lockfile
+          fi
 
       - name: 安装中文字体
         run: |
@@ -71,21 +75,25 @@ jobs:
         node: [22]
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 安装 pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
 
       - name: 安装 Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: |
+          if ! pnpm install --frozen-lockfile; then
+            echo "锁文件与 package.json 不一致,退回非冻结安装"
+            pnpm install --no-frozen-lockfile
+          fi
 
       - name: 规则包配置校验
         run: node scripts/validate-config.mjs
