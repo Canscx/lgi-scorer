@@ -860,3 +860,61 @@ PDF 用 `√ ○ ×` 而非 emoji（中文字体没有 emoji 字形），四态�
 **刻意不改**：`package.json` description、`scripts/build-portable.mjs` 便携包标题、`server/scripts/check-font.ts` 与控制台启动日志。这些是开发者侧标识，改动收益低且会牵连更多部署文档。
 
 **验证**：三处页面无头浏览器实测 —— 登录页 46px、后台 44px、客户页 38px，渐变 id 唯一且引用正确，`document.title` 已更新，favicon link 挂载成功。
+
+### 2026-11-24 · 仓库规范化（README 重写 + GitHub 元数据 + CI + 配套文件）
+
+**背景**：仓库在 GitHub 上的门面过于简陋 —— README 只有文字、没有截图与徽章，仓库没有简介标签、没有 LICENSE、没有 Issue/PR 模板、没有 CI，GitHub 首页看上去像个半成品。
+
+**README 重写**（175 行 → 约 260 行）：
+
+| 改动 | 说明 |
+|---|---|
+| 顶部品牌区 | `assets/logo.svg` + 项目名 + 一句话定位 |
+| 徽章 | license / CI / Node / pnpm / TypeScript / Vue / Express / stars |
+| 英文摘要 | 顶部一段 `> English summary`，照顾 GitHub 搜索与英文访客 |
+| 目录 | 锚点链接到 15 个小节 |
+| 界面一览 | 新增 7 张真实截图（客户填报页、登录页、结果页上下两段、口径差异对照、PDF 报告两页） |
+| 架构图 | ASCII 图升级为 `mermaid` 流程图，标注两份 JSON 契约的传递关系 |
+| 技术栈 | 改为表格，逐层说明选型理由 |
+| 测试与部署 | 补 CI 双平台说明与部署命令速查 |
+
+**截图来源**：全部为真实运行产物，不是设计稿。
+
+- 界面截图用无头 Chrome（CDP）抓取 `http://127.0.0.1:8788`，登录客户账号后逐页截取；
+- PDF 页面图用 `pdfjs-dist/legacy/build/pdf.mjs` + `@napi-rs/canvas` 渲染示例报告；
+- 长图用 Pillow 裁成两段，避免 README 里出现 3000px 的巨图。
+
+**新增仓库图标**：`assets/logo.svg`（128×128，README 用），与 `web/public/favicon.svg` 同源。
+
+**GitHub 仓库元数据**：
+
+| 项 | 值 |
+|---|---|
+| 简介 | 专精特新「小巨人」申报自评打分系统：上传企业材料自动抽取证据，按官方认定标准逐条判定 9 道门槛，输出达标诊断与补足建议 |
+| 标签 | 18 个：vue3 / typescript / vite / express / element-plus / echarts / pdfkit / pdfjs / vitest / pnpm / monorepo / rule-engine / report-generation / document-parsing / self-assessment / scoring / china / policy-compliance |
+| 其他 | 开启 delete-branch-on-merge；补建 labels：bug / enhancement / documentation / question / rules / pdf / good first issue / dependencies |
+
+> 标签只能用 ASCII —— GitHub topics API 拒绝中文 topic（HTTP 422），中文关键词只能靠仓库名、简介与 README 正文覆盖。
+
+**LICENSE**：Apache-2.0（完整文本取自 apache.org，附录版权行填 `Copyright 2026 Canscx`）。
+
+**新增文件**：
+
+| 文件 | 作用 |
+|---|---|
+| `.github/workflows/ci.yml` | Linux + Windows 双平台跑「配置校验 → 类型检查 → 测试 → 字体自检 → 前端构建」 |
+| `.github/ISSUE_TEMPLATE/bug_report.yml` | Bug 表单（issue forms），强制填环境、复现步骤、期望与实际 |
+| `.github/ISSUE_TEMPLATE/feature_request.yml` | 功能建议表单，额外问「是否改变门槛判定口径」 |
+| `.github/ISSUE_TEMPLATE/config.yml` | 模板选择页 + 指向 README 的 contact link |
+| `.github/PULL_REQUEST_TEMPLATE.md` | PR 模板，含 `pnpm validate` 自测清单与规则包改动专项说明 |
+| `.github/dependabot.yml` | 四个 workspace 分别跟进依赖，同 workspace 的 minor/patch 合并成一个 PR |
+| `CONTRIBUTING.md` | 环境要求、硬性规则、改哪里、提交规范、PR 要求 |
+| `SECURITY.md` | 安全边界、支持版本、私密报告渠道、**不算漏洞**的五类情形 |
+| `CODE_OF_CONDUCT.md` | 行为准则 |
+| `CHANGELOG.md` | Keep a Changelog，0.1.0 / 0.2.0 两段取自真实提交记录 |
+
+**CI 的两个平台为什么都要**：本项目最容易出问题的不是业务逻辑，而是**平台差异** —— PDF 中文字形在不同系统字体下会变形（见 `√` 变成根号那次事故）。字体解析、路径分隔符、文件锁的并发行为在 Linux 与 Windows 上完全不同，两个平台都跑一遍才能挡住这类问题。Linux 侧显式安装 `fonts-noto-cjk`，否则 PDF 相关测试会因为找不到中文字体而失败。
+
+**示例报告入库**：`samples/自评报告-示例.pdf`（虚构企业「演示企业-新申请（虚构）」，84.81 分，5 页），README 里可以直接下载看成品。
+
+**刻意不做**：没写 `docs/mockups/` 里那 6 套早期视觉方案（style-a ~ style-f）—— `docs/PLAN.md` 里有引用，保留它们是有意为之的设计记录。
