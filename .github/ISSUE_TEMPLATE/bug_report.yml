@@ -1,0 +1,99 @@
+name: Bug 反馈
+description: 报告一个可复现的问题（门槛判定不符预期、页面报错、PDF 异常、部署失败等）
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请把下面的项填全，尤其是**复现步骤**与**环境**——信息不全的 issue 会被打回重填。
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统
+      description: 客户端和服务器各写一个（如 Windows 11 + Ubuntu 22.04）；只在本机跑就写本机。
+      placeholder: Windows 11
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node 版本
+      description: 终端执行 `node -v` 的输出。仓库要求 >= 20.11。
+      placeholder: v20.11.0
+    validations:
+      required: true
+  - type: input
+    id: pnpm
+    attributes:
+      label: pnpm 版本
+      description: 终端执行 `pnpm -v` 的输出。
+      placeholder: 9.12.0
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 出问题的部分
+      options:
+        - 客户流程（填信息 / 传材料 / 一键评估）
+        - 结果页与门槛判定
+        - PDF 报告
+        - 管理后台（证据确认 / 评分 / 导出）
+        - 材料解析与 AI 抽取
+        - 部署（宝塔 / nginx / PM2 / 更新备份脚本）
+        - 规则包与打分口径
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从头写，1. 2. 3. 逐步列出；注明是界面操作还是直接调接口、用了哪份材料。
+      placeholder: |
+        1. 启动 pnpm start，打开 http://localhost:8788
+        2. 用客户账号进入首页，上传 samples/ 里的 xxx.pdf
+        3. 点「开始评估」
+        4. 出现……
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+      description: 你认为应该是什么样。
+      placeholder: 结果页应显示 GATE_2 不满足，并指出营收不足 5000 万。
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 实际出现了什么，页面上的原文、提示语或数字请照抄。
+      placeholder: 结果页显示 GATE_2 满足。
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 相关日志或 PDF
+      description: 贴服务端控制台日志片段；如果是报告渲染或字体问题，可以直接附上导出的 PDF。贴之前请脱敏，不要包含 API Key、账号口令与企业敏感数据。
+      render: |
+        贴日志片段，或写清"无相关日志"。
+  - type: textarea
+    id: scope
+    attributes:
+      label: 影响范围与门槛
+      description: 影响谁（所有用户 / 只有某类材料 / 只有某台服务器）、是否影响门槛结论。若涉及门槛判定，请写明是哪道门槛（GATE_1 ~ GATE_9）与哪份材料。
+      placeholder: 只影响导入 xlsx 账簿的项目，GATE_5 不受影响。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已拉取最新代码后仍能复现
+          required: true
+        - label: 我已确认日志与附件不含 API Key、账号口令与企业敏感数据
+          required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 先看 README 与方案文档
+    url: https://github.com/Canscx/lgi-scorer#readme
+    about: 使用问题、部署问题、口径疑问，多数在 README、docs/PLAN.md 与 deploy/ 目录里已有答案，先查一遍通常就能解决。
