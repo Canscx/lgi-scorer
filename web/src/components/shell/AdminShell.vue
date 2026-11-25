@@ -22,7 +22,7 @@ onMounted(() => {
   <div class="shell">
     <header class="masthead">
       <div class="brand">
-        <span class="mark"><BrandMark :size="44" :radius="13" /></span>
+        <span class="mark"><BrandMark :size="44" /></span>
         <div>
           <h1>小巨人申报自评打分系统</h1>
           <p class="sub">管理员后台 · 上传材料 · 抽取证据 · 人工确认 · 参考打分</p>
@@ -92,8 +92,6 @@ onMounted(() => {
 .mark {
   display: grid;
   place-items: center;
-  border-radius: 13px;
-  box-shadow: 0 10px 22px -10px rgba(37, 99, 235, 0.65);
 }
 
 h1 {

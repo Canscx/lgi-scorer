@@ -6,7 +6,9 @@
 
 ## [未发布]
 
-暂无改动。新增内容请先记在这里，发布时再归入具体版本。
+### 变更
+
+- **品牌标识换新**：图标从「七根细柱 + 基准线」改为「三根圆角柱 + superellipse 底」——柱高按 0.36 / 0.68 / 1 递进，柱体白→`#E9F1FF` 纵向渐变、透明度 0.72 / 0.88 / 1 分档，底色 `#5B9BFD → #2F6BF0 → #12308F` 对角渐变 + 左上径向高光 + 0.7px 内描边。`BrandMark.vue` 的 `radius` prop 移除，圆角由 superellipse 路径本身决定；投影改由组件内 `drop-shadow` 承担，三处调用点的 `.mark` 不再重复写 `border-radius` 与 `box-shadow`。`web/public/favicon.svg` 与 `assets/logo.svg` 同步替换。
 
 ## [0.2.0] - 2026-11-16
 

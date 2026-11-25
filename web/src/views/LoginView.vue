@@ -312,7 +312,7 @@ const submit = async () => {
       </div>
       <div class="brand-body">
         <div class="brand-head">
-          <span class="mark"><BrandMark :size="46" :radius="14" /></span>
+          <span class="mark"><BrandMark :size="46" /></span>
           <div class="brand-text">
             <strong>小巨人自评</strong>
             <span>上传材料 · 自动打分 · 出具补足建议</span>
@@ -667,8 +667,6 @@ const submit = async () => {
 .mark {
   display: grid;
   place-items: center;
-  border-radius: 14px;
-  box-shadow: 0 14px 28px -16px rgba(37, 99, 235, 0.75);
 }
 
 .brand-text {

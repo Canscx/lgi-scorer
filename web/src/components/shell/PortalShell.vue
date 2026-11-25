@@ -12,7 +12,7 @@ const signOut = () => emit('sign-out')
   <div class="shell">
     <header class="bar">
       <div class="brand" @click="goto('/')">
-        <span class="mark"><BrandMark :size="38" :radius="11" /></span>
+        <span class="mark"><BrandMark :size="38" /></span>
         <div>
           <h1>小巨人自评</h1>
           <p>上传材料 · 自动打分 · 出具补足建议</p>
@@ -68,8 +68,6 @@ const signOut = () => emit('sign-out')
 .mark {
   display: grid;
   place-items: center;
-  border-radius: 11px;
-  box-shadow: 0 10px 22px -12px rgba(37, 99, 235, 0.7);
 }
 
 h1 {
