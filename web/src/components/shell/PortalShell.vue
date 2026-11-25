@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { goto } from '@/router'
 import BrandMark from '@/components/BrandMark.vue'
+import BeianLink from '@/components/BeianLink.vue'
 
 const emit = defineEmits<{ 'sign-out': [] }>()
 
@@ -32,7 +33,8 @@ const signOut = () => emit('sign-out')
     </main>
 
     <footer class="foot">
-      参考得分非官方口径，仅供申报前自查 · 材料仅用于本次评估
+      <span>参考得分非官方口径，仅供申报前自查 · 材料仅用于本次评估</span>
+      <BeianLink />
     </footer>
   </div>
 </template>
@@ -132,10 +134,13 @@ h1 {
 }
 
 .foot {
-  padding-top: 6px;
-  text-align: center;
-  font-size: 11px;
-  color: #cbd5e1;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #6b7280;
   letter-spacing: 0.2px;
 }
 </style>

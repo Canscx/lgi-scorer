@@ -4,6 +4,7 @@ import { goto } from '@/router'
 import { useAiSettings } from '@/composables/useAiSettings'
 import AiSettingsDialog from '@/components/AiSettingsDialog.vue'
 import BrandMark from '@/components/BrandMark.vue'
+import BeianLink from '@/components/BeianLink.vue'
 
 defineProps<{ active: string }>()
 const emit = defineEmits<{ 'sign-out': [] }>()
@@ -54,7 +55,8 @@ onMounted(() => {
     <AiSettingsDialog />
 
     <footer class="foot">
-      数据不出本机 · 参考得分非官方口径 · 证据只认人工确认，打分引擎为纯函数
+      <span>数据不出本机 · 参考得分非官方口径 · 证据只认人工确认，打分引擎为纯函数</span>
+      <BeianLink />
     </footer>
   </div>
 </template>
@@ -197,7 +199,10 @@ h1 {
 .foot {
   margin-top: auto;
   padding-top: 2px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   font-size: 11.5px;
   color: #a3adbb;
   letter-spacing: 0.3px;

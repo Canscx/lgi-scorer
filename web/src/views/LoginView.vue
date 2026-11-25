@@ -5,6 +5,7 @@ import { RULES_ID } from '@lgi/shared'
 import { api, errorText } from '@/api'
 import { clearSavedLogin, loadSavedLogin, saveSavedLogin } from '@/savedLogin'
 import BrandMark from '@/components/BrandMark.vue'
+import BeianLink from '@/components/BeianLink.vue'
 
 const emit = defineEmits<{ done: [] }>()
 
@@ -488,8 +489,7 @@ const submit = async () => {
       </div>
 
       <div class="foot">
-        <span>参考得分非官方口径 · 仅供申报前自查</span>
-        <span>{{ rulesId }}</span>
+        <BeianLink />
       </div>
     </form>
   </div>
@@ -1270,8 +1270,7 @@ const submit = async () => {
   width: min(440px, calc(100% - 2 * clamp(36px, 4vw, 64px)));
   transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
   font-size: 11.5px;
   color: #a3adbb;
   letter-spacing: 0.2px;
