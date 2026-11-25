@@ -45,6 +45,8 @@ export interface AppOptions {
   auth?: AuthConfig | null
 }
 
+const ICON_PATTERN = /^(favicon\.(ico|svg)|apple-touch-icon\.png|icon-\d+\.png)$/
+
 const missingDistHtml = `<!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><title>web/dist 尚未构建</title></head>
@@ -155,9 +157,24 @@ export const createApp = ({ webDist, port, dataDir, maxFileBytes, aiClient, aiMo
     res.status(404).json(payload)
   })
 
-  app.use(express.static(webDist, { index: false, maxAge: '1h' }))
+  app.use(
+    express.static(webDist, {
+      index: false,
+      maxAge: '1h',
+      setHeaders: (res, filePath) => {
+        if (ICON_PATTERN.test(path.basename(filePath))) {
+          res.setHeader('Cache-Control', 'no-cache')
+        }
+      }
+    })
+  )
 
-  app.get(/.*/, (_req, res) => {
+  app.get(/.*/, (req, res) => {
+    if (path.extname(req.path)) {
+      res.status(404).type('text').send('Not Found')
+      return
+    }
+
     const indexFile = path.join(webDist, 'index.html')
     if (existsSync(indexFile)) {
       res.setHeader('Cache-Control', 'no-store, must-revalidate')

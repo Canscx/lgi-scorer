@@ -20,7 +20,8 @@
     "pack:zip": "node scripts/zip-portable.mjs",
     "test": "pnpm --filter @lgi/shared test && pnpm --filter @lgi/server test",
     "fix:identity": "pnpm --filter @lgi/server exec tsx scripts/backfill-identity.ts",
-    "recognize:license": "pnpm --filter @lgi/server exec tsx scripts/recognize-license.ts"
+    "recognize:license": "pnpm --filter @lgi/server exec tsx scripts/recognize-license.ts",
+    "icons": "pnpm --filter @lgi/server icons"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

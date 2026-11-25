@@ -8,7 +8,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "icons": "tsx scripts/generate-icons.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "^1.0.13",

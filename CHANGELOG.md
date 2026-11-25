@@ -6,6 +6,10 @@
 
 ## [未发布]
 
+### 修复
+
+- **favicon 换新后浏览器仍显示旧图标**：根因是 `index.html` 只挂了一条 `<link rel="icon" href="/favicon.svg">`，而 `express.static` 给所有静态资源下发 `Cache-Control: public, max-age=3600`，图标被浏览器缓存 1 小时；同时缺少 `/favicon.ico`，浏览器默认请求会 404 并回落成首页 HTML。现补 `favicon.ico`（16/32/48 三尺寸）、`apple-touch-icon.png`（180）、`icon-192.png`、`icon-512.png`，`index.html` 三条 `<link rel="icon">` 都带 `?v=2`；`server/src/app.ts` 对图标类文件改发 `Cache-Control: no-cache`（仍带 ETag，命中走 304），其余静态资源保持 1 小时；SPA 兜底遇到带扩展名的路径直接 404，不再把首页 HTML 当图片返回。新增 `pnpm icons` 从 `web/public/favicon.svg` 生成上述位图。
+
 ### 变更
 
 - **品牌标识换新**：图标从「七根细柱 + 基准线」改为「三根圆角柱 + superellipse 底」——柱高按 0.36 / 0.68 / 1 递进，柱体白→`#E9F1FF` 纵向渐变、透明度 0.72 / 0.88 / 1 分档，底色 `#5B9BFD → #2F6BF0 → #12308F` 对角渐变 + 左上径向高光 + 0.7px 内描边。`BrandMark.vue` 的 `radius` prop 移除，圆角由 superellipse 路径本身决定；投影改由组件内 `drop-shadow` 承担，三处调用点的 `.mark` 不再重复写 `border-radius` 与 `box-shadow`。`web/public/favicon.svg` 与 `assets/logo.svg` 同步替换。
