@@ -968,3 +968,26 @@ PDF 用 `√ ○ ×` 而非 emoji（中文字体没有 emoji 字形），四态�
 **踩到的坑**：favicon 里原本想用 `<use href="#sq">` 复用路径把体积压到 2.5KB，Chrome 在 `<img>` 与 favicon 上下文里对 `use` + `fill` 继承解析不一致，渲染成空白。改成三条路径各自写全（4.8KB），牺牲 2KB 换取「所有渲染器一致」。
 
 **验证**：无头 Chrome（CDP）三页实测 —— 登录页 46px、管理后台 44px、客户页 38px，SVG 均为 3 path + 3 rect + 3 gradient，渐变 id 按 `useId()` 唯一（`v-0b` / `v-1b`），`drop-shadow` 生效；`/favicon.svg` 返回 200 / 4835 字节；浏览器标签栏 16px 下三柱清晰可辨。`pnpm validate` 158 项测试全绿。
+
+### 2026-11-25 · favicon 不生效的根因与修复
+
+**现象**：logo 已经换新，但浏览器标签栏的 favicon 仍是旧的七柱图标。
+
+**根因（两条叠加）**：
+
+1. **缓存**：`server/src/app.ts` 里 `express.static(webDist, { maxAge: '1h' })` 给**所有**静态资源下发 `Cache-Control: public, max-age=3600`。favicon 的 URL 没变（还是 `/favicon.svg`），浏览器直接用本地缓存，根本不发请求。实测响应头确认：`Cache-Control: public, max-age=3600`、`ETag: W/"12e3-..."`。
+2. **缺 `/favicon.ico`**：`index.html` 只声明了 SVG 一条。很多浏览器（含 Chrome 的部分路径）会**无条件先请求 `/favicon.ico`**，这个文件不存在 → 落到 SPA 兜底 `app.get(/.*/)` → 返回 `200 text/html` 的首页。浏览器拿 HTML 当图片解，失败后可能继续用旧的缓存图标。
+
+**修复**：
+
+| 改动 | 文件 |
+|---|---|
+| 补 `favicon.ico`（16/32/48 三帧）、`apple-touch-icon.png`(180)、`icon-192.png`、`icon-512.png` | `web/public/` |
+| 三条 `<link rel="icon">` 全带 `?v=2`，一次性甩掉旧缓存 | `web/index.html` |
+| 图标类文件改发 `Cache-Control: no-cache`（保留 ETag，命中仍走 304），其余静态资源维持 1 小时 | `server/src/app.ts` |
+| SPA 兜底遇带扩展名路径直接 404，不再把首页 HTML 当图片返回 | `server/src/app.ts` |
+| 新增 `pnpm icons`：用 `@napi-rs/canvas` 把 `favicon.svg` 栅格化成上述位图，ICO 用 Node 手写目录头拼装 | `server/scripts/generate-icons.ts` |
+
+**为什么不是"清缓存就好"**：只清缓存能治一次，但下次换图标还得让所有人再清一次。根因是「URL 不变 + 强缓存」，所以必须从响应头与文件名两头一起改：`no-cache` 保证以后改文件立即生效，`?v=2` 保证已经缓存了旧版的那批浏览器这次能拿到新文件。
+
+**验证**：新增 `server/test/icons.spec.ts` 4 条 —— 五个图标文件都发 `no-cache`、普通静态资源仍是 `max-age=3600`、缺失的 `/favicon-missing.png` 返回 404（不再回落 HTML）、前端路由 `/projects/abc` 仍回落 `index.html`。浏览器实测三条 `<link rel="icon">` 均 200 且 `Cache-Control: no-cache`；Pillow 校验 ICO 三帧尺寸正确。`pnpm validate` 162 项测试全绿（新增 4 项）。
