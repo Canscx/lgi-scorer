@@ -918,3 +918,26 @@ PDF 用 `√ ○ ×` 而非 emoji（中文字体没有 emoji 字形），四态�
 **示例报告入库**：`samples/自评报告-示例.pdf`（虚构企业「演示企业-新申请（虚构）」，84.81 分，5 页），README 里可以直接下载看成品。
 
 **刻意不做**：没写 `docs/mockups/` 里那 6 套早期视觉方案（style-a ~ style-f）—— `docs/PLAN.md` 里有引用，保留它们是有意为之的设计记录。
+
+### 2026-11-25 · 页脚备案号
+
+**背景**：站点上线需要挂 ICP 备案号，点击跳转工信部备案系统。
+
+新建 `web/src/components/BeianLink.vue`：一个 `<a>` 指向 `https://beian.miit.gov.cn/`，`target="_blank"` + `rel="noopener noreferrer"`，文案 `浙ICP备2025216279号`。颜色 `inherit`，hover 变 `#2563eb` 加下划线，所以三处页脚各自控制底色即可，组件不写死颜色。
+
+挂载位置（三处，覆盖全部页面）：
+
+| 文件 | 页脚 |
+|---|---|
+| `PortalShell.vue` | 客户侧全部页面 |
+| `AdminShell.vue` | 管理后台全部页面 |
+| `LoginView.vue` | 登录页 |
+
+**排版**：三处页脚从「单行 flex」改为「纵向两行居中」（`flex-direction: column` + `align-items: center` + `gap: 6px`），备案号独占第二行，不与免责声明同行。
+
+**登录页**：原本左「参考得分非官方口径 · 仅供申报前自查」右「rules.lgi.v1.0.0」的一行，按客户要求整行删除，页脚只留备案号，`.foot` 去掉 `justify-content: space-between` 改为 `center`。
+
+**客户页文字加深**：`PortalShell` 页脚原 `#cbd5e1`（近白）实测对比度不足，改为 `#6b7280`；字号 11 → 11.5。管理后台保持 `#a3adbb`。
+
+**验证**：无头 Chrome（CDP）逐页断言 —— 三页 `a.beian` 均存在、文案与 href 正确、`target=_blank`、可见且有尺寸、备案号在免责声明下一行（`noteAbove: true`）、水平居中（`beianCentered: true`）、无横向溢出。`pnpm validate` 158 项测试全绿。
+
