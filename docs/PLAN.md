@@ -941,3 +941,30 @@ PDF 用 `√ ○ ×` 而非 emoji（中文字体没有 emoji 字形），四态�
 
 **验证**：无头 Chrome（CDP）逐页断言 —— 三页 `a.beian` 均存在、文案与 href 正确、`target=_blank`、可见且有尺寸、备案号在免责声明下一行（`noteAbove: true`）、水平居中（`beianCentered: true`）、无横向溢出。`pnpm validate` 158 项测试全绿。
 
+### 2026-11-25 · 品牌标识重做（logo + favicon）
+
+**背景**：原图标是「七根 2.5px 细柱 + 一条 50% 透明基准线」。柱太细，16px 下糊成一排灰点；基准线在 favicon 尺寸完全消失，只在大图上多出一层噪点；`border-radius: 9.3` 的圆角矩形在 macOS / iOS 旁边看显得方正。
+
+**新标识**：**三根圆角柱 + superellipse 底**。
+
+| 元素 | 做法 |
+|---|---|
+| 底 | 指数 4.6 的 superellipse（44 段采样 + Catmull-Rom 转三次贝塞尔），比 `rx` 圆角矩形更「软」，与 iOS / 新版 macOS 图标语言一致 |
+| 底色 | `#5B9BFD → #2F6BF0 → #12308F` 对角渐变，左上叠加径向高光（0.3 → 0.07 → 0） |
+| 柱 | 三根 5.5×高、`rx 2.75` 的全圆头柱，高度 8.4 / 14.6 / 20.8（比例 0.36 / 0.68 / 1），白→`#E9F1FF` 纵向渐变，透明度 0.72 / 0.88 / 1 分档 |
+| 收边 | 0.7px `#FFF` / 20% 内描边，防止深色底上边缘发糊 |
+
+**为什么从七柱改成三柱**：七柱是本项目的「七项认定指标」语义，但 16px 时每根柱只有 1.2px 宽，实际渲染出来是一片噪点。三柱保留「逐级上升」的语义，同时每根柱在 16px 下仍有 2.75px 圆头，能看清。语义记录保留在本节与 CHANGELOG，不靠图形硬扛。
+
+**改动文件**：
+
+| 文件 | 改动 |
+|---|---|
+| `web/src/components/BrandMark.vue` | 重写；`radius` prop 移除，superellipse 路径由脚本按参数算好后内联；投影移进组件（`filter: drop-shadow(0 4px 9px rgba(18,48,143,.26))`） |
+| `web/public/favicon.svg` | 同源重画，4835 字节 |
+| `assets/logo.svg` | 同源重画，128×128，4895 字节 |
+| `PortalShell.vue` / `AdminShell.vue` / `LoginView.vue` | 三处 `<BrandMark :size :radius>` 去掉 `radius`；`.mark` 只保留 `display: grid; place-items: center`，删掉重复的 `border-radius` 与 `box-shadow` |
+
+**踩到的坑**：favicon 里原本想用 `<use href="#sq">` 复用路径把体积压到 2.5KB，Chrome 在 `<img>` 与 favicon 上下文里对 `use` + `fill` 继承解析不一致，渲染成空白。改成三条路径各自写全（4.8KB），牺牲 2KB 换取「所有渲染器一致」。
+
+**验证**：无头 Chrome（CDP）三页实测 —— 登录页 46px、管理后台 44px、客户页 38px，SVG 均为 3 path + 3 rect + 3 gradient，渐变 id 按 `useId()` 唯一（`v-0b` / `v-1b`），`drop-shadow` 生效；`/favicon.svg` 返回 200 / 4835 字节；浏览器标签栏 16px 下三柱清晰可辨。`pnpm validate` 158 项测试全绿。
